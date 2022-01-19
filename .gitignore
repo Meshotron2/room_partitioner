@@ -1,6 +1,0 @@
-*.xml
-!pom.xml
-*.dwm
-/target
-/.idea/
-*.iml

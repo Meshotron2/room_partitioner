@@ -1,14 +1,13 @@
-package com.monitor.monitor;
+package github.meshotron2.java.main;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MonitorApplication {
+public class MainApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MonitorApplication.class, args);
+		SpringApplication.run(MainApplication.class, args);
 	}
 
-	
 }
