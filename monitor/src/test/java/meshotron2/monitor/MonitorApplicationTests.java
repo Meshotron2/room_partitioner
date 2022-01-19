@@ -1,10 +1,10 @@
-package github.meshotron2.java.main;
+package meshotron2.monitor;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class MainApplicationTests {
+class MonitorApplicationTests {
 
 	@Test
 	void contextLoads() {

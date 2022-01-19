@@ -8,10 +8,10 @@
 		<version>2.6.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>github.meshotron2.java</groupId>
-	<artifactId>main</artifactId>
+	<groupId>meshotron2</groupId>
+	<artifactId>monitor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>main</name>
+	<name>monitor</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>11</java.version>
