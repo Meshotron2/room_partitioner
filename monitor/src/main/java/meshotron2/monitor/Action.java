@@ -1,4 +1,4 @@
-package com.github.meshotron2.monitor;
+package com.monitor.src.main.java.meshtron2.monitor;
 
 public class Action {
     public void action(String id){

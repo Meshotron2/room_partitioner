@@ -1,4 +1,4 @@
-package com.monitor.monitor;
+package com.monitor.src.main.java.meshtron2.monitor;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

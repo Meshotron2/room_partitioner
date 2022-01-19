@@ -1,4 +1,4 @@
-package com.monitor.monitor.service;
+package com.monitor.src.main.java.meshtron2.monitor;
 
 public interface TransferFile {
     
