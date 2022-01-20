@@ -1,7 +1,6 @@
 package com.github.meshotron2.room_partitioner.cluster_api;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,9 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 public class ClusterController {
     @GetMapping
-	public String enter(){
-		return "Hello";
-	}
-
-    
+    public String enter() {
+        return "Hello";
+    }
 }

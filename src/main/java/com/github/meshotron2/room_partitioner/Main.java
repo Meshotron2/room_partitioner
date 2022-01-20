@@ -11,18 +11,18 @@ import java.util.Scanner;
 @SpringBootApplication
 public class Main {
 
-	public static final String PROMPT = "> ";
+    public static final String PROMPT = "> ";
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 //        System.out.println(System.getProperty("user.dir"));
-		SpringApplication.run(Main.class, args);
-		final Scanner scanner = new Scanner(System.in);
+        SpringApplication.run(Main.class, args);
+        final Scanner scanner = new Scanner(System.in);
 
-		final CLI cli = new CLI();
-		cli.addMenu(new MainMenu(scanner));
+        final CLI cli = new CLI();
+        cli.addMenu(new MainMenu(scanner));
 
-		cli.start();
+        cli.start();
 
-		scanner.close();
-	}
+        scanner.close();
+    }
 }
