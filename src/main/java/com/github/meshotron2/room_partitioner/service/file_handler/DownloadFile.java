@@ -23,22 +23,22 @@ public class DownloadFile implements TransferFile {
 
     private Logger logger = LoggerFactory.getLogger(DownloadFile.class);
 
-    @Value("${sftp.host}")
+//    @Value("${sftp.host}")
     private String host;
-
-    @Value("${sftp.port}")
+//
+//    @Value("${sftp.port}")
     private Integer port;
-
-    @Value("${sftp.username}")
+//
+//    @Value("${sftp.username}")
     private String username;
-
-    @Value("${sftp.password}")
+//
+//    @Value("${sftp.password}")
     private String password;
-
-    @Value("${sftp.sessionTimeout}")
+//
+//    @Value("${sftp.sessionTimeout}")
     private Integer sessionTimeout;
-
-    @Value("${sftp.channelTimeout}")
+//
+//    @Value("${sftp.channelTimeout}")
     private Integer channelTimeout;
 
     @Override
