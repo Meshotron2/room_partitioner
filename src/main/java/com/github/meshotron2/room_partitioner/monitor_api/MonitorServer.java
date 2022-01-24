@@ -39,7 +39,8 @@ public class MonitorServer extends Thread {
                 final InputStream input = socket.getInputStream();
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-                final String data = reader.readLine();
+                String data = reader.readLine();
+                data = data.substring(0, data.indexOf('}')+1);
 
                 final GsonBuilder builder = new GsonBuilder();
                 builder.registerTypeAdapter(MonitorData.class, new MonitorDeserializer());
