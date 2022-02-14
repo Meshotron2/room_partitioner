@@ -1,6 +1,7 @@
 package com.github.meshotron2.room_partitioner.monitor_api;
 
 public class Node implements MonitorData {
+    private final byte nodeId;
     private final int cores;
     private final int threads;
     private final float cpu;
@@ -9,7 +10,8 @@ public class Node implements MonitorData {
     //    private final float[] temperature;
     private final String temperature;
 
-    public Node(int cores, int threads, float cpu, int totalRam, int usedRam, /*float[]*/ String temperature) {
+    public Node(byte nodeId, int cores, int threads, float cpu, int totalRam, int usedRam, /*float[]*/ String temperature) {
+        this.nodeId = nodeId;
         this.cores = cores;
         this.threads = threads;
         this.cpu = cpu;
@@ -21,7 +23,8 @@ public class Node implements MonitorData {
     @Override
     public String toString() {
         return "Node{" +
-                "cores=" + cores +
+                "nodeid" + nodeId +
+                ", cores=" + cores +
                 ", threads=" + threads +
                 ", cpu=" + cpu +
                 ", totalRam=" + totalRam +
@@ -29,5 +32,9 @@ public class Node implements MonitorData {
 //                ", temperature=" + Arrays.toString(temperature) +
                 ", temperature=" + temperature +
                 '}';
+    }
+
+    public byte getNodeId() {
+        return nodeId;
     }
 }

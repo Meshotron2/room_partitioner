@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping
+//@RequestMapping
 public class ClusterController {
     @GetMapping
-    public String enter() {
+    public String getInfo() {
         return "Hello";
     }
 }
