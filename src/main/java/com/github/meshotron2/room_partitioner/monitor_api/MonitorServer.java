@@ -10,10 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * with help from
@@ -28,10 +25,7 @@ public class MonitorServer extends Thread {
     public static final int PORT = 9999;
 
     private final Map<Byte, Node> data = new HashMap<>();
-
-    public MonitorServer() {
-        System.out.println("I'm starting motherfucker");
-    }
+    private final Map<Byte, Set<Process>> processes = new HashMap<>();
 
     public void run() {
         try (final ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -48,7 +42,7 @@ public class MonitorServer extends Thread {
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
                 String data = reader.readLine();
-                data = data.substring(0, data.indexOf('}')+1);
+                data = data.substring(0, data.indexOf('}') + 1);
 
                 final GsonBuilder builder = new GsonBuilder();
                 builder.registerTypeAdapter(MonitorData.class, new MonitorDeserializer());
@@ -64,7 +58,10 @@ public class MonitorServer extends Thread {
                     final Node n = (Node) received;
                     this.data.put(n.getNodeId(), n);
                 } else {
-
+                    final Process p = (Process) received;
+                    if (!this.processes.containsKey(p.getNodeId()))
+                        this.processes.put(p.getNodeId(), new HashSet<>());
+                    this.processes.get(p.getNodeId()).add(p);
                 }
 
                 final String jsonString = gson.toJson(received);

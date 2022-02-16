@@ -2,12 +2,14 @@ package com.github.meshotron2.room_partitioner.monitor_api;
 
 public class Process implements MonitorData {
 
+    private final byte nodeId;
     private final int pid;
     private final float cpu;
     private final int ram;
     private final int progress;
 
-    public Process(int pid, float cpu, int ram, int progress) {
+    public Process(byte nodeId, int pid, float cpu, int ram, int progress) {
+        this.nodeId = nodeId;
         this.pid = pid;
         this.cpu = cpu;
         this.ram = ram;
@@ -17,11 +19,16 @@ public class Process implements MonitorData {
     @Override
     public String toString() {
         return "Process{" +
+                "node_id=" + nodeId +
                 "pid=" + pid +
                 ", cpu=" + cpu +
                 ", ram=" + ram +
                 ", progress=" + progress +
                 '}';
+    }
+
+    public byte getNodeId() {
+        return nodeId;
     }
 }
 
