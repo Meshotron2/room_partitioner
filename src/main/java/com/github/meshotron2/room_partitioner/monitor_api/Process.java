@@ -6,9 +6,9 @@ public class Process implements MonitorData {
     private final int pid;
     private final float cpu;
     private final int ram;
-    private final int progress;
+    private final float progress;
 
-    public Process(byte nodeId, int pid, float cpu, int ram, int progress) {
+    public Process(byte nodeId, int pid, float cpu, int ram, float progress) {
         this.nodeId = nodeId;
         this.pid = pid;
         this.cpu = cpu;
