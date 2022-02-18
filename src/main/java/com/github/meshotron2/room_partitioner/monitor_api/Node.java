@@ -7,12 +7,12 @@ public class Node implements MonitorData {
     private final int cores;
     private final int threads;
     private final float cpu;
-    private final int totalRam;
+    private final long totalRam;
     private final int usedRam;
     private final float[] temperature;
 //    private final String temperature;
 
-    public Node(byte nodeId, int cores, int threads, float cpu, int totalRam, int usedRam, float[] /*String*/ temperature) {
+    public Node(byte nodeId, int cores, int threads, float cpu, long totalRam, int usedRam, float[] /*String*/ temperature) {
         this.nodeId = nodeId;
         this.cores = cores;
         this.threads = threads;

@@ -30,5 +30,9 @@ public class Process implements MonitorData {
     public byte getNodeId() {
         return nodeId;
     }
+
+    public int getPid() {
+        return pid;
+    }
 }
 

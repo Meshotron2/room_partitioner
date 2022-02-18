@@ -2,6 +2,7 @@ package com.github.meshotron2.room_partitioner.monitor_api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -24,8 +25,12 @@ import java.util.*;
 public class MonitorServer extends Thread {
     public static final int PORT = 9999;
 
-    private final Map<Byte, Node> data = new HashMap<>();
-    private final Map<Byte, Set<Process>> processes = new HashMap<>();
+    private final DataAggregate data;
+
+    public MonitorServer(@Autowired DataAggregate data) {
+        this.data = data;
+    }
+
 
     public void run() {
         try (final ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -50,25 +55,26 @@ public class MonitorServer extends Thread {
 
                 final Gson gson = builder.create();
 
-                System.out.println(data);
+//                System.out.println(data);
 
                 final MonitorData received = gson.fromJson(data, MonitorData.class);
 
                 if (received instanceof Node) {
                     final Node n = (Node) received;
-                    this.data.put(n.getNodeId(), n);
+                    this.data.getNodes().put(n.getNodeId(), n);
                 } else {
                     final Process p = (Process) received;
-                    if (!this.processes.containsKey(p.getNodeId()))
-                        this.processes.put(p.getNodeId(), new HashSet<>());
-                    this.processes.get(p.getNodeId()).add(p);
+                    if (!this.data.getProcesses().containsKey(p.getNodeId()))
+                        this.data.getProcesses().put(p.getNodeId(), new HashMap<>());
+                    this.data.getProcesses().get(p.getNodeId()).put(p.getPid(), p);
                 }
 
-                final String jsonString = gson.toJson(received);
-                System.out.println(jsonString);
-                System.out.println(received);
-
-                System.out.println(received);
+//                final String jsonString = gson.toJson(received);
+//                System.out.println(jsonString);
+//                System.out.println(received);
+//
+//                System.out.println(received);
+                write();
             }
 
         } catch (IOException e) {
@@ -77,7 +83,12 @@ public class MonitorServer extends Thread {
         }
     }
 
-    public Map<Byte, Node> getData() {
+    private void write() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        System.out.println(gson.toJson(data));
+    }
+
+    public DataAggregate getData() {
         return data;
     }
 }

@@ -1,12 +1,17 @@
 package com.github.meshotron2.room_partitioner.cluster_api;
 
+import com.github.meshotron2.room_partitioner.monitor_api.DataAggregate;
 import com.github.meshotron2.room_partitioner.monitor_api.MonitorServer;
 import com.github.meshotron2.room_partitioner.monitor_api.Node;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.FileWriter;
 
 /**
  * Endpoint to fetch the cluster status
@@ -20,9 +25,13 @@ public class StatusController {
         this.server = server;
     }
 
-    @GetMapping(value = "/info", consumes = "text/json")
-    public String getInfo(@RequestParam("id") int id) {
-        Node s = server.getData().get((byte) id);
-        return s == null ? "no shit" : s.toString();
+    @GetMapping("/info")
+    public String getInfo() {
+        final GsonBuilder builder = new GsonBuilder();
+        final Gson gson = builder.setPrettyPrinting().create();
+
+        //        System.out.println(data);
+
+        return gson.toJson(server.getData());
     }
 }
