@@ -2,19 +2,18 @@ package com.github.meshotron2.room_partitioner.monitor_api;
 
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class DataAggregate {
-    protected final Map<Byte, Node> nodes = new HashMap<>();
-    protected final Map<Byte, Map<Integer, Process>> processes = new HashMap<>();
+    protected final Set<Node> nodes = new HashSet<>();
+    protected final Map<Byte, List<Process>> processes = new HashMap<>();
 
-    public Map<Byte, Map<Integer, Process>> getProcesses() {
-        return processes;
+    public Set<Node> getNodes() {
+        return nodes;
     }
 
-    public Map<Byte, Node> getNodes() {
-        return nodes;
+    public Map<Byte, List<Process>> getProcesses() {
+        return processes;
     }
 }

@@ -38,11 +38,6 @@ public class MonitorServer extends Thread {
             while (true) {
                 final Socket socket = serverSocket.accept();
 
-//                System.out.println("GUI connected");
-
-//                final OutputStream output = socket.getOutputStream();
-//                final PrintWriter writer = new PrintWriter(output, true);
-
                 final InputStream input = socket.getInputStream();
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
@@ -55,25 +50,33 @@ public class MonitorServer extends Thread {
 
                 final Gson gson = builder.create();
 
-//                System.out.println(data);
-
                 final MonitorData received = gson.fromJson(data, MonitorData.class);
 
                 if (received instanceof Node) {
                     final Node n = (Node) received;
-                    this.data.getNodes().put(n.getNodeId(), n);
+                    this.data.getNodes().add(n);
                 } else {
                     final Process p = (Process) received;
                     if (!this.data.getProcesses().containsKey(p.getNodeId()))
-                        this.data.getProcesses().put(p.getNodeId(), new HashMap<>());
-                    this.data.getProcesses().get(p.getNodeId()).put(p.getPid(), p);
+                        this.data.getProcesses().put(p.getNodeId(), new ArrayList<>());
+//                    this.data.getProcesses().get(p.getNodeId()).put(p.getPid(), p);
+
+                    final List<Process> processes = this.data.getProcesses().get(p.getNodeId());
+
+                    boolean found = false;
+                    for (int i = 0; i < processes.size(); i++)
+                        if (p.getPid() == processes.get(i).getPid()) {
+                            System.out.print("Found, " + processes.size());
+                            processes.set(i, p);
+                            System.out.print(" - " + processes.size() + '\n');
+                            found = true;
+                            break;
+                        }
+
+                    if (!found)
+                        processes.add(p);
                 }
 
-//                final String jsonString = gson.toJson(received);
-//                System.out.println(jsonString);
-//                System.out.println(received);
-//
-//                System.out.println(received);
                 write();
             }
 

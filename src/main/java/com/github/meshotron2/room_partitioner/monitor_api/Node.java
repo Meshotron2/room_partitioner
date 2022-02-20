@@ -1,6 +1,7 @@
 package com.github.meshotron2.room_partitioner.monitor_api;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Node implements MonitorData {
     private final byte nodeId;
@@ -38,5 +39,18 @@ public class Node implements MonitorData {
 
     public byte getNodeId() {
         return nodeId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Node node = (Node) o;
+        return nodeId == node.nodeId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nodeId);
     }
 }
