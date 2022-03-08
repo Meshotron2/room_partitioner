@@ -11,12 +11,12 @@ public class Room {
     private final int y;
     private final int z;
 
-    private final long f;
+    private final int f;
 
     private DataInputStream reader;
     private DataOutputStream writer;
 
-    Room(String file, int x, int y, int z, long f) {
+    Room(String file, int x, int y, int z, int f) {
         this.file = file;
         this.x = x;
         this.y = y;
@@ -94,7 +94,7 @@ public class Room {
         final int y = Integer.reverseBytes(reader.readInt());
         final int z = Integer.reverseBytes(reader.readInt());
 
-        final long f = Long.reverseBytes(reader.readLong());
+        final int f = Integer.reverseBytes(reader.readInt());
 
         reader.close();
         return new Room(file, x, y, z, f);
@@ -116,7 +116,7 @@ public class Room {
         return z;
     }
 
-    public long getF() {
+    public int getF() {
         return f;
     }
 }

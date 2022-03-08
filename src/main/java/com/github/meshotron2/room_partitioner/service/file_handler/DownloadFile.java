@@ -16,9 +16,10 @@ import com.jcraft.jsch.SftpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-@Service
+@Component
 public class DownloadFile implements TransferFile {
 
     private Logger logger = LoggerFactory.getLogger(DownloadFile.class);
