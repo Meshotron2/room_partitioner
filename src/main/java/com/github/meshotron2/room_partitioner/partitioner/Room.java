@@ -39,12 +39,15 @@ public class Room {
     }
 
     public char readNode() throws IOException {
-        final byte[] bs = new byte[2];
+//        final byte[] bs = new byte[2];
+//        final byte bs;
 
-        int status = reader.read(bs);
-        if (status != 2) return '\n';
+//        int status = reader.read(bs);
+//        if (status != 2) return '\n';
 
-        return (char) (((char) bs[0]) << 8 | ((char) bs[1]));
+//        return (char) (((char) bs[0]) << 8 | ((char) bs[1]));
+
+        return reader.readChar();
     }
 
     public void startWrite() throws IOException {
@@ -63,7 +66,7 @@ public class Room {
         this.writer.writeInt(Integer.reverseBytes(y));
         this.writer.writeInt(Integer.reverseBytes(z));
 
-        this.writer.writeLong(Long.reverseBytes(f));
+        this.writer.writeInt(Integer.reverseBytes(f));
     }
 
     public void endWrite() throws IOException {
@@ -71,7 +74,7 @@ public class Room {
     }
 
     public void writeNode(char c) throws IOException {
-        writer.write(new byte[]{(byte) c, (byte) (c >> 8)});
+        writer.write(c);
     }
 
 //    public void writeNode(char c, int x, int y, int z) throws IOException {
