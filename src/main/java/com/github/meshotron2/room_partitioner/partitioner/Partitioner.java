@@ -24,9 +24,9 @@ public class Partitioner {
 
         System.out.println("PREVIOUSLY: " + room.getF());
 
-        int x = room.getX();
-        int y = room.getY();
-        int z = room.getZ();
+        final int x = room.getX();
+        final int y = room.getY();
+        final int z = room.getZ();
         final int xdiv = x / xg;
         final int ydiv = y / yg;
         final int zdiv = z / zg;

@@ -1,6 +1,7 @@
 package com.github.meshotron2.room_partitioner;
 
 import com.github.meshotron2.room_partitioner.monitor_api.MonitorServer;
+import com.github.meshotron2.room_partitioner.service.Server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,8 +11,9 @@ public class Main {
 
     public static final String PROMPT = "> ";
 
-    public Main(@Autowired MonitorServer server) {
+    public Main(@Autowired MonitorServer server, @Autowired Server fileTransferServer) {
         new Thread(server).start();
+        new Thread(fileTransferServer).start();
     }
 
     public static void main(String[] args) {

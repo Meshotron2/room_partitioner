@@ -1,4 +1,4 @@
-package main.java.com.github.meshotron2.room_partitioner.service;
+package com.github.meshotron2.room_partitioner.service;
 
 import java.io.*;
 import java.net.Socket;
