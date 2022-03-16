@@ -1,5 +1,6 @@
 package com.github.meshotron2.room_partitioner.partitioner;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ class PartNode {
             return null;
 
         children[childCnt++] = node;
-        return children[childCnt];
+        return children[childCnt-1];
     }
 
     int getNumLeafs() {
@@ -182,6 +183,13 @@ class PartTree {
                 }
             }
         }
+
+        if (n == r)
+            return;
+
+        for (int i = 0; i < r; i++) {
+            pt[i].partition(n/r);
+        }
     }
 
     public PartNode getX() {
@@ -207,6 +215,10 @@ public class Partitioner {
     private final int n;
     private final PartTree tree;
 
+    public static void main(String[] args) throws IOException {
+        new Partitioner(Room.fromFile("placeholder.dwm"), 0, 0, 0, 8).autoPartition();
+    }
+
     public Partitioner(Room room, int xg, int yg, int zg) {
         this.room = room;
         this.xg = xg;
@@ -224,9 +236,9 @@ public class Partitioner {
         this.n = n;
 
         tree = new PartTree(
-                new PartNode(x, null, 0, 0),
-                new PartNode(y, null, 0, 0),
-                new PartNode(z, null, 0, 0)
+                new PartNode(room.getX(), null, 0, 0),
+                new PartNode(room.getY(), null, 0, 0),
+                new PartNode(room.getZ(), null, 0, 0)
         );
     }
 
@@ -243,7 +255,8 @@ public class Partitioner {
         final int yDiv = y.getNumLeafs();
         final int zDiv = z.getNumLeafs();
 
-        return new Partitioner(room, xDiv, yDiv, zDiv).partition();
+        System.out.printf("%d %d %d%n", xDiv, yDiv, zDiv);
+        return partition();
     }
 
     public List<Room> partition() throws IOException {
@@ -269,13 +282,14 @@ public class Partitioner {
             rooms.add(r);
         }
 
+        System.out.println(rooms.size());
         int cnt = 0;
         for (int i = 0; i < x; i++)
             for (int j = 0; j < y; j++)
                 for (int k = 0; k < z; k++) {
                     final int nodeNumber = cnt++ % rooms.size();
                     rooms.get(nodeNumber).writeNode(room.readNode());
-                    System.out.println("written " + cnt);
+//                    System.out.println("written " + cnt);
                 }
 
         for (Room room1 : rooms)

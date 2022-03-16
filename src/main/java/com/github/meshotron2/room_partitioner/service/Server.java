@@ -1,5 +1,7 @@
 package com.github.meshotron2.room_partitioner.service;
 
+import com.github.meshotron2.room_partitioner.partitioner.Partitioner;
+import com.github.meshotron2.room_partitioner.partitioner.Room;
 import org.springframework.stereotype.Component;
 
 import java.io.DataInputStream;
@@ -11,8 +13,10 @@ import java.net.Socket;
 @Component
 public class Server extends Thread{
 
+    public static final String FILE_NAME = "placeholder.dwm";
+
     public void run() {
-        try (ServerSocket serverSocket = new ServerSocket(5000)) {
+        try (final ServerSocket serverSocket = new ServerSocket(5000)) {
             System.out.println("listening to port:5000");
             while (true) {
                 final Socket clientSocket = serverSocket.accept();
@@ -20,7 +24,12 @@ public class Server extends Thread{
                 final DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
                 final DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-                receiveFile("filename", dataInputStream);
+                System.out.println("First!");
+                receiveFile(FILE_NAME, dataInputStream);
+                System.out.println("Here!");
+
+                final Room r = Room.fromFile(FILE_NAME);
+                new Partitioner(r, 0, 0, 0, 8).autoPartition();
 
                 dataInputStream.close();
                 dataOutputStream.close();
@@ -33,7 +42,7 @@ public class Server extends Thread{
 
     private void receiveFile(String fileName, DataInputStream dataInputStream) throws Exception {
         int bytes;
-        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+        final FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 
         long size = dataInputStream.readLong();
         byte[] buffer = new byte[4 * 1024];

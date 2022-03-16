@@ -23,7 +23,7 @@ import java.util.*;
  */
 @Component
 public class MonitorServer extends Thread {
-    public static final int PORT = 9999;
+    public static final int PORT = 8888;
 
     private final DataAggregate data;
 
@@ -50,6 +50,7 @@ public class MonitorServer extends Thread {
 
                 final Gson gson = builder.create();
 
+                System.out.println(data);
                 final MonitorData received = gson.fromJson(data, MonitorData.class);
 
                 if (received instanceof Node) {
