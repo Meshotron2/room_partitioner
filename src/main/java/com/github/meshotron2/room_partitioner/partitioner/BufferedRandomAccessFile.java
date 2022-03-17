@@ -21,7 +21,7 @@ public class BufferedRandomAccessFile extends RandomAccessFile
         lastCachedPos = -1;
 
         maxBufferSize = bufferSize;
-        bufferSize = -1;
+        this.bufferSize = -1;
         lastBufferPos = -1;
     }
 
