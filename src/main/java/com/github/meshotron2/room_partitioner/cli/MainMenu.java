@@ -32,18 +32,18 @@ public class MainMenu extends Menu {
                 }
 
                 final Partitioner partitioner = new PartitionerInputSequence(getScanner()).validate();
-                try {
-                    partitioner.setFile(Room.fromFile(fileName));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    final List<Room> rooms = partitioner.partition();
-                    if (rooms == null)
-                        System.out.println("not valid");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    partitioner.setFile(Room.fromFile(fileName));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                try {
+//                    final List<Room> rooms = partitioner.partition();
+//                    if (rooms == null)
+//                        System.out.println("not valid");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
                 break;
             case 2:
                 getScanner().close();

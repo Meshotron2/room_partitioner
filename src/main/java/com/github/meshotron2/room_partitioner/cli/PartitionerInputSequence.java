@@ -19,11 +19,12 @@ public class PartitionerInputSequence extends InputSequence<Partitioner> {
 
     @Override
     protected Partitioner get(String s) throws MenuException {
-        final Partitioner p = new Partitioner(null,
-                (int) getInputs().get(0).validate(),
-                (int) getInputs().get(1).validate(),
-                (int) getInputs().get(2).validate());
-
-        return p.isCoordsValid() ? p : null;
+//        final Partitioner p = new Partitioner(null,
+//                (int) getInputs().get(0).validate(),
+//                (int) getInputs().get(1).validate(),
+//                (int) getInputs().get(2).validate());
+//
+//        return p.isCoordsValid() ? p : null;
+        return null;
     }
 }
