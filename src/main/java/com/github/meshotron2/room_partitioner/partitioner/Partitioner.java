@@ -1,328 +1,221 @@
 package com.github.meshotron2.room_partitioner.partitioner;
 
-import javax.swing.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-class PartNode {
-    private int value;
-    private PartNode[] children;
-    private int maxChildCnt;
-    private int childCnt;
-
-    private int leafs = -1;
-
-    PartNode(int value, PartNode[] children, int childCnt, int maxChildCnt) {
-        this.value = value;
-        this.children = children;
-        this.childCnt = childCnt;
-        this.maxChildCnt = maxChildCnt;
-    }
-
-    void setChildCnt(int childCnt) {
-        this.children = new PartNode[childCnt];
-        this.maxChildCnt = childCnt;
-        this.childCnt = 0;
-    }
-
-    void setValue(int value) {
-        this.value = value;
-    }
-
-    PartNode addChild(PartNode node) {
-        if (childCnt == maxChildCnt)
-            return null;
-
-        children[childCnt++] = node;
-        return children[childCnt-1];
-    }
-
-    int getNumLeafs() {
-        if (children == null)
-            return 1;
-
-        int sum = 0;
-
-        for (int i = 0; i < childCnt; i++)
-            sum += children[i].getNumLeafs();
-
-        return sum;
-    }
-
-    private void getLeafsInternal(PartNode[] buffer) {
-        if (leafs == -1)
-            leafs = 0;
-
-        if (children == null) {
-            buffer[leafs] = this;
-            leafs++;
-            return;
-        }
-
-        for (int i = 0; i < childCnt; i++) {
-            children[i].getLeafsInternal(buffer);
-        }
-    }
-
-    PartNode[] getLeafs() {
-        final int numLeafs = getNumLeafs();
-        PartNode[] leafs = new PartNode[numLeafs];
-
-        this.leafs = 0;
-        getLeafsInternal(leafs);
-
-        return leafs;
-    }
-
-    public int getValue() {
-        return this.value;
-    }
-}
-
-class PartTree {
-    private final PartNode x;
-    private final PartNode y;
-    private final PartNode z;
-
-    PartTree(PartNode x, PartNode y, PartNode z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    private int findNextRoot(int n) {
-        int r = 2;
-        while (n % r != 0)
-            r++;
-
-        return r;
-    }
-
-    public void partition(int n) {
-        if (n < 2) return;
-
-        int r = findNextRoot(n);
-
-        final PartTree[] pt = new PartTree[r];
-
-        if (x.getValue() >= y.getValue()) {
-            if (x.getValue() >= z.getValue()) {
-                int rem = x.getValue() % r;
-                x.setChildCnt(r);
-                for (int i = 0; i < r; i++) {
-                    int value;
-                    if (rem > 0) {
-                        value = x.getValue() / r + 1;
-                        rem--;
-                    } else {
-                        value = x.getValue() / r;
-                    }
-
-                    final PartNode node = new PartNode(value, null, 0, 0);
-                    final PartNode newNode = x.addChild(node);
-
-                    final PartTree t = new PartTree(newNode, y, z);
-                    pt[i] = t;
-                }
-            } else {
-                int rem = z.getValue() % r;
-                z.setChildCnt(r);
-                for (int i = 0; i < r; i++) {
-                    int value;
-                    if (rem > 0) {
-                        value = z.getValue() / r + 1;
-                        rem--;
-                    } else {
-                        value = z.getValue() / r;
-                    }
-
-                    final PartNode node = new PartNode(value, null, 0, 0);
-                    final PartNode newNode = z.addChild(node);
-
-                    final PartTree t = new PartTree(x, y, newNode);
-                    pt[i] = t;
-                }
-            }
-        } else {
-            if (x.getValue() >= z.getValue() || y.getValue() >= z.getValue()) {
-                int rem = y.getValue() % r;
-                y.setChildCnt(r);
-                for (int i = 0; i < r; i++) {
-                    int value;
-                    if (rem > 0) {
-                        value = y.getValue() / r + 1;
-                        rem--;
-                    } else {
-                        value = y.getValue() / r;
-                    }
-
-                    final PartNode node = new PartNode(value, null, 0, 0);
-                    final PartNode newNode = y.addChild(node);
-
-                    final PartTree t = new PartTree(x, newNode, z);
-                    pt[i] = t;
-                }
-            } else {
-                int rem = z.getValue() % r;
-                z.setChildCnt(r);
-                for (int i = 0; i < r; i++) {
-                    int value;
-                    if (rem > 0) {
-                        value = z.getValue() / r + 1;
-                        rem--;
-                    } else {
-                        value = z.getValue() / r;
-                    }
-
-                    final PartNode node = new PartNode(value, null, 0, 0);
-                    final PartNode newNode = z.addChild(node);
-
-                    final PartTree t = new PartTree(x, y, newNode);
-                    pt[i] = t;
-                }
-            }
-        }
-
-        if (n == r)
-            return;
-
-        for (int i = 0; i < r; i++) {
-            pt[i].partition(n/r);
-        }
-    }
-
-    public PartNode getX() {
-        return x;
-    }
-
-    public PartNode getY() {
-        return y;
-    }
-
-    public PartNode getZ() {
-        return z;
-    }
-}
+import java.util.*;
 
 public class Partitioner {
+    public static void main(String[] args) throws IOException
+    {
+        //PrintStream fileOut = new PrintStream("./out.txt");
+        //System.setOut(fileOut);
+        
+        Room original = Room.fromFile("./room_test_2d_complete.dwm");
 
-    private Room room;
-    private final int xg;
-    private final int yg;
-    private final int zg;
-
-    private final int n;
-    private final PartTree tree;
-
-    public static void main(String[] args) throws IOException {
-        new Partitioner(Room.fromFile("placeholder.dwm"), 0, 0, 0, 8).autoPartition();
+        autoPartition(original, 2);
     }
 
-    public Partitioner(Room room, int xg, int yg, int zg) {
-        this.room = room;
-        this.xg = xg;
-        this.yg = yg;
-        this.zg = zg;
-        this.n = xg + yg + zg;
-        tree = null;
+    public static void autoPartition(Room room, int partitionCnt) throws IOException
+    {
+        List<Partition> partitions = autoPartition(room.getX(), room.getY(), room.getZ(), partitionCnt);
+
+        partition(room, partitions);
     }
 
-    public Partitioner(Room room, int x, int y, int z, int n) {
-        this.room = room;
-        this.xg = x;
-        this.yg = y;
-        this.zg = z;
-        this.n = n;
+    public static void manualPartition(Room room, int xDiv, int yDiv, int zDiv) throws IOException
+    {
+        List<Partition> partitions = manualPartition(room.getX(), room.getY(), room.getZ(), xDiv, yDiv, zDiv);
 
-        tree = new PartTree(
-                new PartNode(room.getX(), null, 0, 0),
-                new PartNode(room.getY(), null, 0, 0),
-                new PartNode(room.getZ(), null, 0, 0)
-        );
+        partition(room, partitions);
     }
+    
+    private static void partition(Room original, List<Partition> partitions) throws IOException
+    {
+        String roomPrefix = original.getFileName().substring(0, original.getFileName().lastIndexOf(".dwm"));
+        for (int p = 0; p < partitions.size(); p++)
+        {
+            Partition partition = partitions.get(p);
+            Room partitionRoom = new Room(String.format("%s_%d.dwm", roomPrefix, p), partition.getXf() - partition.getXi() + 1, partition.getYf() - partition.getYi() + 1, partition.getZf() - partition.getZi() + 1, original.getF());
+            partitionRoom.startWrite();
 
-    public List<Room> autoPartition() throws IOException {
-        if (tree == null) return null;
+            int bytes = 0;
 
-        tree.partition(n);
-
-        final PartNode x = tree.getX();
-        final PartNode y = tree.getY();
-        final PartNode z = tree.getZ();
-
-        final int xDiv = x.getNumLeafs();
-        final int yDiv = y.getNumLeafs();
-        final int zDiv = z.getNumLeafs();
-
-        System.out.printf("%d %d %d%n", xDiv, yDiv, zDiv);
-        return partition();
-    }
-
-    public List<Room> partition() throws IOException {
-        if (!validate())
-            return null;
-
-        System.out.println("PREVIOUSLY: " + room.getF());
-
-        final int x = room.getX();
-        final int y = room.getY();
-        final int z = room.getZ();
-        final int xdiv = x / xg;
-        final int ydiv = y / yg;
-        final int zdiv = z / zg;
-
-        final String basename = room.getFile().substring(0, room.getFile().length() - 4);
-        final List<Room> rooms = new ArrayList<>();
-
-        room.startRead();
-        for (int nodeNumber = 0; nodeNumber < xg * yg * zg; nodeNumber++) {
-            final Room r = new Room(basename + "_" + nodeNumber + ".dwm", xdiv, ydiv, zdiv, room.getF());
-            r.startWrite();
-            rooms.add(r);
+            for (int x = partition.getXi(), x2 = 0; x <= partition.getXf(); x++, x2++)
+            {
+                for (int y = partition.getYi(), y2 = 0; y <= partition.getYf(); y++, y2++)
+                {
+                    for (int z = partition.getZi(), z2 = 0; z <= partition.getZf(); z++, z2++)
+                    {
+                        partitionRoom.writeNodeAt(x2, y2, z2, original.readNodeAt(x, y, z));
+                        bytes++;
+                    }
+                }
+            }
+            System.out.println("Bytes written: " + bytes);
+            partitionRoom.endWrite();
         }
 
-        System.out.println(rooms.size());
-        int cnt = 0;
-        for (int i = 0; i < x; i++)
-            for (int j = 0; j < y; j++)
-                for (int k = 0; k < z; k++) {
-                    final int nodeNumber = cnt++ % rooms.size();
-                    rooms.get(nodeNumber).writeNode(room.readNode());
-//                    System.out.println("written " + cnt);
+        System.out.println("Finished");
+    }
+    
+    private static List<Partition> manualPartition(int xs, int ys, int zs, int xDiv, int yDiv, int zDiv)
+    {
+        PartitionTrees trees = new PartitionTrees(new Node(xs), new Node(ys), new Node(zs));
+
+        partitionTree(trees, trees.getXRoot(), xDiv);
+        partitionTree(trees, trees.getYRoot(), yDiv);
+        partitionTree(trees, trees.getZRoot(), zDiv);
+
+        List<Node> xLeafs = trees.getXRoot().getLeafs();
+        List<Node> yLeafs = trees.getYRoot().getLeafs();
+        List<Node> zLeafs = trees.getZRoot().getLeafs();
+
+        List<Partition> partitions = new ArrayList<Partition>();
+
+        int p = 0;
+        for (int x = 0, xi = 0; x < xDiv; x++)
+        {
+            for (int y = 0, yi = 0; y < yDiv; y++)
+            {
+                for (int z = 0, zi = 0; z < zDiv; z++)
+                {
+                    System.out.println(String.format("Partition %d xi:%d yi:%d zi:%d xf:%d yf:%d zf:%d", p, xi, yi, zi, xi + xLeafs.get(x).getValue() - 1, yi + yLeafs.get(y).getValue() - 1, zi + zLeafs.get(z).getValue() - 1));
+
+                    partitions.add(new Partition(xi, xi + xLeafs.get(x).getValue() - 1, yi, yi + yLeafs.get(y).getValue() - 1, zi, zi + zLeafs.get(z).getValue() - 1));                  
+
+                    zi += zLeafs.get(z).getValue();
+                    p++;
                 }
+                yi += yLeafs.get(y).getValue();
+            }
+            xi += xLeafs.get(x).getValue();
+        }
 
-        for (Room room1 : rooms)
-            room1.endWrite();
-        room.endRead();
-        return rooms;
+        return partitions;
     }
 
-    /**
-     * Given the node index return the boundaries of the cuboid encapsulating the node
-     *
-     * @param n the node index
-     * @return the boundaries of the node.
-     * First point will be the closest to 0,0,0, the second will be the furthest
-     */
-    private int[][] getNodeBoundaries(int n) {
-        final int x = n / (yg * zg);
-        final int y = (n % (yg * zg)) / zg;
-        final int z = (n % (yg * zg)) % zg;
+    private static List<Partition> autoPartition(int xs, int ys, int zs, int i) 
+    {
+        long start = System.nanoTime();
 
-        return new int[][]{{x * xg, y * yg, z * zg}, {x * xg + xg, y * yg + yg, z * zg + zg}};
+        PartitionTrees trees = new PartitionTrees(new Node(xs), new Node(ys), new Node(zs));
+        partitionInternal(trees, i);
+
+        int xDiv = trees.getXRoot().getNumLeafs();
+        int yDiv = trees.getYRoot().getNumLeafs();
+        int zDiv = trees.getZRoot().getNumLeafs();
+
+        System.out.println(xDiv);
+        System.out.println(yDiv);
+        System.out.println(zDiv);
+        
+        List<Node> xLeafs = trees.getXRoot().getLeafs();
+        List<Node> yLeafs = trees.getYRoot().getLeafs();
+        List<Node> zLeafs = trees.getZRoot().getLeafs();
+
+        List<Partition> partitions = new ArrayList<Partition>();
+
+        int p = 0;
+        for (int x = 0, xi = 0; x < xDiv; x++)
+        {
+            for (int y = 0, yi = 0; y < yDiv; y++)
+            {
+                for (int z = 0, zi = 0; z < zDiv; z++)
+                {
+                    System.out.println(String.format("Partition %d xi:%d yi:%d zi:%d xf:%d yf:%d zf:%d", p, xi, yi, zi, xi + xLeafs.get(x).getValue() - 1, yi + yLeafs.get(y).getValue() - 1, zi + zLeafs.get(z).getValue() - 1));
+
+                    partitions.add(new Partition(xi, xi + xLeafs.get(x).getValue() - 1, yi, yi + yLeafs.get(y).getValue() - 1, zi, zi + zLeafs.get(z).getValue() - 1));                  
+
+                    zi += zLeafs.get(z).getValue();
+                    p++;
+                }
+                yi += yLeafs.get(y).getValue();
+            }
+            xi += xLeafs.get(x).getValue();
+        }
+
+        long finish = System.nanoTime();
+        long timeElapsed = finish - start;
+        System.out.println("Took " + timeElapsed / 1000000 + " milliseconds.");
+
+        return partitions;
     }
 
-    private boolean validate() {
-        return room != null && room.getFile() != null && isCoordsValid();
+    private static void partitionInternal(PartitionTrees trees, int i)
+    {
+        if (i < 2) return;
+        
+        int r = findNextRoot(i);
+        Node fakeXRoot = trees.getXRoot();
+        Node fakeYRoot = trees.getYRoot();
+        Node fakeZRoot = trees.getZRoot();
+
+        for(; i >= r; i /= r)
+        {
+            List<Node> children;
+
+            if (fakeXRoot.getValue() >= fakeYRoot.getValue())
+            {
+                if(fakeXRoot.getValue() >= fakeZRoot.getValue())
+                {
+                    //divide x
+                    children = trees.getXRoot().getLeafs();
+                    fakeXRoot = new Node(fakeXRoot.getValue() / r);
+                }
+                else
+                {
+                    // divide z
+                    children = trees.getYRoot().getLeafs();
+                    fakeZRoot = new Node(fakeZRoot.getValue() / r);
+                }
+            }
+            else 
+            {
+                if(fakeXRoot.getValue() >= fakeZRoot.getValue() || fakeYRoot.getValue() >= fakeZRoot.getValue())
+                {
+                    // divide y
+                    children = trees.getYRoot().getLeafs();
+                    fakeYRoot = new Node(fakeYRoot.getValue() / r);
+                }
+                else
+                {
+                    // divide z
+                    children = trees.getZRoot().getLeafs();
+                    fakeZRoot = new Node(fakeZRoot.getValue() / r);
+                }
+                
+            }
+
+            for(Node child : children)
+            {
+                partitionTree(trees, child, r);
+            }
+        }
     }
 
-    public boolean isCoordsValid() {
-        // TODO: 12/4/21 validate if the integers make sense for this room
-        return xg > 0 && yg > 0 && zg > 0;
+    private static void partitionTree(PartitionTrees roots, Node root, int r)
+    {
+        int rem = root.getValue() % r;
+        for (int j = 0; j < r; j++)
+        {
+            int value = root.getValue() / r;
+            if (rem > 0)
+            {
+                value++;
+                rem--;
+            }
+
+            Node child = new Node(value);
+            root.addChild(child);
+        }
     }
 
-    public void setFile(Room room) {
-        this.room = room;
+    private static int findNextRoot(int n) 
+    {
+        int r = 2;
+        while (n % r != 0) {
+            r++;
+        }
+
+        return r;
     }
 }

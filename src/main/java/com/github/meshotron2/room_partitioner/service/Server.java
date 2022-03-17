@@ -29,7 +29,7 @@ public class Server extends Thread{
                 System.out.println("Here!");
 
                 final Room r = Room.fromFile(FILE_NAME);
-                new Partitioner(r, 0, 0, 0, 8).autoPartition();
+                Partitioner.autoPartition(r, 2);
 
                 dataInputStream.close();
                 dataOutputStream.close();

@@ -1,11 +1,10 @@
 package com.github.meshotron2.room_partitioner.partitioner;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
-public class Room {
-    private final String file;
+public class Room 
+{
+    private final String fileName;
 
     private final int x;
     private final int y;
@@ -13,113 +12,104 @@ public class Room {
 
     private final int f;
 
-    private DataInputStream reader;
-    private DataOutputStream writer;
+    private RandomAccessFile roomFile;
 
-    Room(String file, int x, int y, int z, int f) {
-        this.file = file;
+    public Room(String fileName, int x, int y, int z, int f) throws IOException
+    {
+        this.fileName = fileName;
         this.x = x;
         this.y = y;
         this.z = z;
         this.f = f;
 
-        System.out.println(this.f);
+        this.roomFile = new RandomAccessFile(fileName, "rw");
     }
 
-    public void startRead() throws IOException {
-        if (file == null)
-            throw new IllegalStateException("Room file name cannot be null");
-
-        this.reader = new DataInputStream(new FileInputStream(file));
-        reader.skip(24); // skip until first char
+    private Room(String fileName, int x, int y, int z, int f, RandomAccessFile roomFile) 
+    {
+        this.fileName = fileName;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.f = f;
+        this.roomFile = roomFile;
     }
 
-    public void endRead() throws IOException {
-        reader.close();
+    public static Room fromFile(String fileName) throws IOException
+    {
+        final RandomAccessFile roomFile = new RandomAccessFile(fileName, "rw");
+
+        roomFile.seek(0);
+        final int x = Integer.reverseBytes(roomFile.readInt());
+        final int y = Integer.reverseBytes(roomFile.readInt());
+        final int z = Integer.reverseBytes(roomFile.readInt());
+
+        final int f = Integer.reverseBytes(roomFile.readInt());
+
+        roomFile.seek(24);
+
+        return new Room(fileName, x, y, z, f, roomFile);
     }
 
-    public char readNode() throws IOException {
-//        final byte[] bs = new byte[2];
-//        final byte bs;
+    public void startWrite() throws IOException
+    {
+        this.roomFile.seek(0);
+        this.roomFile.writeInt(Integer.reverseBytes(x));
+        this.roomFile.writeInt(Integer.reverseBytes(y));
+        this.roomFile.writeInt(Integer.reverseBytes(z));
 
-//        int status = reader.read(bs);
-//        if (status != 2) return '\n';
-
-//        return (char) (((char) bs[0]) << 8 | ((char) bs[1]));
-
-        return reader.readChar();
+        this.roomFile.writeInt(Integer.reverseBytes(f));
     }
 
-    public void startWrite() throws IOException {
-        if (file == null)
-            throw new IllegalStateException("Room file name cannot be null");
-
-        final Path path = Path.of(file);
-        if (Files.exists(path))
-            Files.delete(path);
-
-        Files.createFile(path);
-
-        this.writer = new DataOutputStream(new FileOutputStream(file));
-
-        this.writer.writeInt(Integer.reverseBytes(x));
-        this.writer.writeInt(Integer.reverseBytes(y));
-        this.writer.writeInt(Integer.reverseBytes(z));
-
-        this.writer.writeInt(Integer.reverseBytes(f));
+    public void writeNodeAt(int x, int y, int z, Byte c) throws IOException
+    {
+        roomFile.seek((long)(x * this.y * this.z + y * this.z + z) + 16);
+        roomFile.writeByte(c);
     }
 
-    public void endWrite() throws IOException {
-        writer.close();
+    public void writeNode(Byte c) throws IOException
+    {
+        roomFile.writeByte(c);
     }
 
-    public void writeNode(char c) throws IOException {
-        writer.write(c);
+    public void endWrite() throws IOException
+    {
+        roomFile.close();
     }
 
-//    public void writeNode(char c, int x, int y, int z) throws IOException {
-//        final int n = 24 + x * y * z;
-//
-//        byte[] bytes = {(byte) (c >> 8), (byte) c};
-////        System.out.println(bytes.length);
-////        writer.write(bytes, n, 2);
-//
-//        randWriter = new RandomAccessFile(file, "rw");
-//        randWriter.seek(n);
-//        randWriter.write(bytes);
-//        randWriter.close();
-//    }
-
-    public static Room fromFile(String file) throws IOException {
-        final DataInputStream reader = new DataInputStream(new FileInputStream(file));
-
-        final int x = Integer.reverseBytes(reader.readInt());
-        final int y = Integer.reverseBytes(reader.readInt());
-        final int z = Integer.reverseBytes(reader.readInt());
-
-        final int f = Integer.reverseBytes(reader.readInt());
-
-        reader.close();
-        return new Room(file, x, y, z, f);
+    public byte readNodeAt(int x, int y, int z) throws IOException
+    {
+        roomFile.seek((long)(x * this.y * this.z + y * this.z + z) + 16);
+        return roomFile.readByte();
     }
 
-    public String getFile() {
-        return file;
+    public byte readNode() throws IOException
+    {
+        return roomFile.readByte();
     }
 
-    public int getX() {
+    public String getFileName()
+    {
+        return fileName;
+    }
+    
+    public int getX()
+    {
         return x;
     }
 
-    public int getY() {
+    public int getY()
+    {
         return y;
     }
 
-    public int getZ() {
+    public int getZ()
+    {
         return z;
     }
 
-    public int getF() {
+    public int getF()
+    {
         return f;
     }
 }
