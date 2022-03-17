@@ -12,7 +12,7 @@ public class Room
 
     private final int f;
 
-    private RandomAccessFile roomFile;
+    private BufferedRandomAccessFile roomFile;
 
     public Room(String fileName, int x, int y, int z, int f) throws IOException
     {
@@ -22,10 +22,10 @@ public class Room
         this.z = z;
         this.f = f;
 
-        this.roomFile = new RandomAccessFile(fileName, "rw");
+        this.roomFile = new BufferedRandomAccessFile(fileName, 16384);
     }
 
-    private Room(String fileName, int x, int y, int z, int f, RandomAccessFile roomFile) 
+    private Room(String fileName, int x, int y, int z, int f, BufferedRandomAccessFile roomFile) 
     {
         this.fileName = fileName;
         this.x = x;
@@ -37,7 +37,7 @@ public class Room
 
     public static Room fromFile(String fileName) throws IOException
     {
-        final RandomAccessFile roomFile = new RandomAccessFile(fileName, "rw");
+        final BufferedRandomAccessFile roomFile = new BufferedRandomAccessFile(fileName, 16384);
 
         roomFile.seek(0);
         final int x = Integer.reverseBytes(roomFile.readInt());
@@ -63,8 +63,7 @@ public class Room
 
     public void writeNodeAt(int x, int y, int z, Byte c) throws IOException
     {
-        roomFile.seek((long)(x * this.y * this.z + y * this.z + z) + 16);
-        roomFile.writeByte(c);
+        roomFile.writeByte(c, (long)(x * this.y * this.z + y * this.z + z) + 16);
     }
 
     public void writeNode(Byte c) throws IOException
@@ -79,8 +78,7 @@ public class Room
 
     public byte readNodeAt(int x, int y, int z) throws IOException
     {
-        roomFile.seek((long)(x * this.y * this.z + y * this.z + z) + 16);
-        return roomFile.readByte();
+        return roomFile.readByte((long)(x * this.y * this.z + y * this.z + z) + 16);
     }
 
     public byte readNode() throws IOException
