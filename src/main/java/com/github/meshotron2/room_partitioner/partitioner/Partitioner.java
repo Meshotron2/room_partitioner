@@ -3,17 +3,8 @@ package com.github.meshotron2.room_partitioner.partitioner;
 import java.io.IOException;
 import java.util.*;
 
-public class Partitioner {
-    public static void main(String[] args) throws IOException
-    {
-        //PrintStream fileOut = new PrintStream("./out.txt");
-        //System.setOut(fileOut);
-        
-        Room original = Room.fromFile("./room_test_2d_complete.dwm");
-
-        autoPartition(original, 2);
-    }
-
+public class Partitioner 
+{
     public static void autoPartition(Room room, int partitionCnt) throws IOException
     {
         List<Partition> partitions = autoPartition(room.getX(), room.getY(), room.getZ(), partitionCnt);
