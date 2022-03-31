@@ -8,22 +8,35 @@ public class Process implements MonitorData {
     private final int ram;
     private final float progress;
 
-    public Process(byte nodeId, int pid, float cpu, int ram, float progress) {
+    private final float sendTime;
+    private final float receiveTime;
+    private final float scatterTime;
+    private final float delayTime;
+
+    public Process(byte nodeId, int pid, float cpu, int ram, float progress, float sendTime, float receiveTime, float scatterTime, float delayTime) {
         this.nodeId = nodeId;
         this.pid = pid;
         this.cpu = cpu;
         this.ram = ram;
         this.progress = progress;
+        this.sendTime = sendTime;
+        this.receiveTime = receiveTime;
+        this.scatterTime = scatterTime;
+        this.delayTime = delayTime;
     }
 
     @Override
     public String toString() {
         return "Process{" +
-                "node_id=" + nodeId +
-                "pid=" + pid +
+                "nodeId=" + nodeId +
+                ", pid=" + pid +
                 ", cpu=" + cpu +
                 ", ram=" + ram +
                 ", progress=" + progress +
+                ", sendTime=" + sendTime +
+                ", receiveTime=" + receiveTime +
+                ", scatterTime=" + scatterTime +
+                ", delayTime=" + delayTime +
                 '}';
     }
 
