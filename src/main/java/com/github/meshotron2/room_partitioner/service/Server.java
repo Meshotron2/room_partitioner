@@ -9,11 +9,19 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 
 @Component
-public class Server extends Thread{
+public class Server extends Thread {
 
     public static final String FILE_NAME = "placeholder.dwm";
+
+    private final String[] ips;
+
+    public Server(String[] ips) {
+        this.ips = ips;
+        System.out.println("The ips are: " + Arrays.toString(ips));
+    }
 
     public void run() {
         try (final ServerSocket serverSocket = new ServerSocket(5000)) {
@@ -29,7 +37,12 @@ public class Server extends Thread{
                 System.out.println("Here!");
 
                 final Room r = Room.fromFile(FILE_NAME);
-                Partitioner.autoPartition(r, 2);
+                int partitionCnt = 2;
+                Partitioner.autoPartition(r, partitionCnt);
+
+                for (int i = 0; i < partitionCnt; i++) {
+                    SendFileClient.send(String.format("placeholder_%d.dwm", i), ips[i]);
+                }
 
                 dataInputStream.close();
                 dataOutputStream.close();
