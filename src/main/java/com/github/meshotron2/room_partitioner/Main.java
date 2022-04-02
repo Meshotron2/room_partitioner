@@ -20,16 +20,14 @@ public class Main {
     }
 
     public Main(@Autowired MonitorServer server, @Autowired Server fileTransferServer) {
+        fileTransferServer.setIps(ips);
         new Thread(server).start();
         new Thread(fileTransferServer).start();
     }
 
     public static void main(String[] args) {
 //        System.out.println(System.getProperty("user.dir"));
-        final String[] arg_ips = new String[args.length - 1];
-        for (int i = 1; i < args.length; i++)
-            ips[i - 1] = args[i];
-        ips = arg_ips;
+        ips = args;
         SpringApplication.run(Main.class, args);
 //        final Scanner scanner = new Scanner(System.in);
 //

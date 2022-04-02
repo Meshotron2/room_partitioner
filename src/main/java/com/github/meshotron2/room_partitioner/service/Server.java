@@ -16,9 +16,9 @@ public class Server extends Thread {
 
     public static final String FILE_NAME = "placeholder.dwm";
 
-    private final String[] ips;
+    private String[] ips;
 
-    public Server(String[] ips) {
+    public void setIps(String[] ips) {
         this.ips = ips;
         System.out.println("The ips are: " + Arrays.toString(ips));
     }
