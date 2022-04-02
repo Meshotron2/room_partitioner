@@ -10,6 +10,7 @@ public interface SendFileClient {
 
     static void main(String[] args) {
         SendFileClient.send("placeholder.dwm", "127.0.0.1");
+        SendFileClient.send("placeholder.dwm", "127.0.0.1");
     }
 
     static void send(String fileName, String ip) {
@@ -31,13 +32,16 @@ public interface SendFileClient {
         final FileInputStream fileInputStream = new FileInputStream(file);
 
 
-        dataOutputStream.writeLong(file.length());
+//        dataOutputStream.writeLong(file.length());
 
         final byte[] buffer = new byte[4 * 1024];
         while ((bytes = fileInputStream.read(buffer)) != -1) {
             dataOutputStream.write(buffer, 0, bytes);
             dataOutputStream.flush();
         }
+//        dataOutputStream.write('\0');
+//        dataOutputStream.flush();
+
         fileInputStream.close();
         System.out.println("Finished transfer");
     }
