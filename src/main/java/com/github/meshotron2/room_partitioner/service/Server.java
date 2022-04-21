@@ -1,5 +1,7 @@
 package com.github.meshotron2.room_partitioner.service;
 
+import com.github.meshotron2.room_partitioner.merger.Merger;
+import com.github.meshotron2.room_partitioner.partitioner.Partition;
 import com.github.meshotron2.room_partitioner.partitioner.Partitioner;
 import com.github.meshotron2.room_partitioner.partitioner.Room;
 import org.springframework.stereotype.Component;
@@ -7,9 +9,11 @@ import org.springframework.stereotype.Component;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class Server extends Thread {
@@ -38,11 +42,18 @@ public class Server extends Thread {
 
                 final Room r = Room.fromFile(FILE_NAME);
                 int partitionCnt = 2;
-                Partitioner.autoPartition(r, partitionCnt);
+                List<Partition> partitions = Partitioner.autoPartition(r, partitionCnt);
 
                 for (int i = 0; i < partitionCnt; i++) {
                     SendFileClient.send(String.format("placeholder_%d.dwm", i), ips[i]);
                 }
+
+                // launch dwm processes here and wait for them to finish
+
+                // recover the files from the nodes
+
+                // merge
+                Merger.merge("./", FILE_NAME, 221, partitions);
 
                 dataInputStream.close();
                 dataOutputStream.close();
