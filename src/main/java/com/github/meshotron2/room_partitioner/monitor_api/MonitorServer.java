@@ -57,6 +57,7 @@ public class MonitorServer extends Thread {
                     final Node n = (Node) received;
                     this.data.getNodes().add(n);
                 } else {
+                    System.out.println(received.toString());
                     final Process p = (Process) received;
                     if (!this.data.getProcesses().containsKey(p.getNodeId()))
                         this.data.getProcesses().put(p.getNodeId(), new ArrayList<>());
