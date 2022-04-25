@@ -4,16 +4,20 @@ import java.io.IOException;
 import java.util.*;
 
 public interface Partitioner {
-    static void autoPartition(Room room, int partitionCnt) throws IOException {
+    static List<Partition> autoPartition(Room room, int partitionCnt) throws IOException {
         final List<Partition> partitions = autoPartition(room.getX(), room.getY(), room.getZ(), partitionCnt);
 
         partition(room, partitions);
+
+        return partitions;
     }
 
-    static void manualPartition(Room room, int xDiv, int yDiv, int zDiv) throws IOException {
+    static List<Partition> manualPartition(Room room, int xDiv, int yDiv, int zDiv) throws IOException {
         final List<Partition> partitions = manualPartition(room.getX(), room.getY(), room.getZ(), xDiv, yDiv, zDiv);
 
         partition(room, partitions);
+
+        return partitions;
     }
 
     private static void partition(Room original, List<Partition> partitions) throws IOException {
@@ -53,13 +57,13 @@ public interface Partitioner {
 
         List<Partition> partitions = new ArrayList<Partition>();
 
-        int p = 0;
+        int p = 1;
         for (int x = 0, xi = 0; x < xDiv; x++) {
             for (int y = 0, yi = 0; y < yDiv; y++) {
                 for (int z = 0, zi = 0; z < zDiv; z++) {
                     System.out.println(String.format("Partition %d xi:%d yi:%d zi:%d xf:%d yf:%d zf:%d", p, xi, yi, zi, xi + xLeafs.get(x).getValue() - 1, yi + yLeafs.get(y).getValue() - 1, zi + zLeafs.get(z).getValue() - 1));
 
-                    partitions.add(new Partition(xi, xi + xLeafs.get(x).getValue() - 1, yi, yi + yLeafs.get(y).getValue() - 1, zi, zi + zLeafs.get(z).getValue() - 1));
+                    partitions.add(new Partition(p, xi, xi + xLeafs.get(x).getValue() - 1, yi, yi + yLeafs.get(y).getValue() - 1, zi, zi + zLeafs.get(z).getValue() - 1));
 
                     zi += zLeafs.get(z).getValue();
                     p++;
@@ -92,13 +96,13 @@ public interface Partitioner {
 
         final List<Partition> partitions = new ArrayList<>();
 
-        int p = 0;
+        int p = 1;
         for (int x = 0, xi = 0; x < xDiv; x++) {
             for (int y = 0, yi = 0; y < yDiv; y++) {
                 for (int z = 0, zi = 0; z < zDiv; z++) {
                     System.out.println(String.format("Partition %d xi:%d yi:%d zi:%d xf:%d yf:%d zf:%d", p, xi, yi, zi, xi + xLeafs.get(x).getValue() - 1, yi + yLeafs.get(y).getValue() - 1, zi + zLeafs.get(z).getValue() - 1));
 
-                    partitions.add(new Partition(xi, xi + xLeafs.get(x).getValue() - 1, yi, yi + yLeafs.get(y).getValue() - 1, zi, zi + zLeafs.get(z).getValue() - 1));
+                    partitions.add(new Partition(p, xi, xi + xLeafs.get(x).getValue() - 1, yi, yi + yLeafs.get(y).getValue() - 1, zi, zi + zLeafs.get(z).getValue() - 1));
 
                     zi += zLeafs.get(z).getValue();
                     p++;
