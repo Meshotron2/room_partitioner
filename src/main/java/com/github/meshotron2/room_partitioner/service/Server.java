@@ -7,19 +7,17 @@ import com.github.meshotron2.room_partitioner.partitioner.Room;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.css.Counter;
 
+import javax.servlet.http.Part;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
-<<<<<<< HEAD
 import java.util.concurrent.atomic.AtomicInteger;
-=======
 import java.util.List;
->>>>>>> 6bb4fe1e6a7ef349f42c1160d9193106cd3779cc
 
 @Component
 public class Server extends Thread {
@@ -36,6 +34,9 @@ public class Server extends Thread {
     public void run() {
 
         final AtomicInteger cnt = new AtomicInteger();
+        final int partitionCnt = 2;
+
+        List<Partition> partitions = new ArrayList<>();
 
         try (final ServerSocket serverSocket = new ServerSocket(5000)) {
             System.out.println("listening to port:5000");
@@ -45,22 +46,23 @@ public class Server extends Thread {
                 final DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
                 final DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-                receiveFile(FILE_NAME, dataInputStream, cnt);
+                if (receiveFile(FILE_NAME, dataInputStream, cnt)) {
 
-                final Room r = Room.fromFile(FILE_NAME);
-                int partitionCnt = 2;
-                List<Partition> partitions = Partitioner.autoPartition(r, partitionCnt);
+                    final Room r = Room.fromFile(FILE_NAME);
+                    partitions = Partitioner.autoPartition(r, partitionCnt);
 
-//                for (int i = 0; i < partitionCnt; i++) {
-//                    SendFileClient.send(String.format("placeholder_%d.dwm", i), ips[i]);
-//                }
+                    for (int i = 0; i < partitionCnt; i++) {
+                        SendFileClient.send(String.format("placeholder_%d.dwm", i), ips[i]);
+                    }
 
-                // launch dwm processes here and wait for them to finish
+                    // launch dwm processes here and wait for them to finish
+                } else if (partitions.size() > 0) {
+                    // recover the files from the nodes
 
-                // recover the files from the nodes
-
-                // merge
-                Merger.merge("./", FILE_NAME, 221, partitions);
+                    // merge
+                    if (partitions.size() == partitionCnt)
+                        Merger.merge("./", FILE_NAME, 221, partitions);
+                }
 
                 dataInputStream.close();
                 dataOutputStream.close();
@@ -71,7 +73,14 @@ public class Server extends Thread {
         }
     }
 
-    private void receiveFile(String fileName, DataInputStream dataInputStream, AtomicInteger cnt) throws Exception {
+    /**
+     * @param fileName
+     * @param dataInputStream
+     * @param cnt
+     * @return `true` if it was a dwm file, false if it was a pcm
+     * @throws Exception
+     */
+    private boolean receiveFile(String fileName, DataInputStream dataInputStream, AtomicInteger cnt) throws Exception {
         System.out.println("FILEEEEEEEE");
         int bytes;
 
@@ -86,6 +95,7 @@ public class Server extends Thread {
                 size -= bytes;
             }
             fileOutputStream.close();
+            return true;
         } else {
             System.out.println("GOT FINAL");
             final String folder = String.valueOf(type);
@@ -102,6 +112,7 @@ public class Server extends Thread {
             }
 
             fileOutputStream.close();
+            return false;
         }
     }
 }
