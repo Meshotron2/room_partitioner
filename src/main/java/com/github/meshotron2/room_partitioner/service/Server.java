@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
@@ -48,6 +49,9 @@ public class Server extends Thread {
                 }
 
                 // launch dwm processes here and wait for them to finish
+                System.out.println("Launching DWM processes...");
+                int returnCode = launchDWMProcesses(2, this.ips, new String[] { "usb0" }, "/home/pi/M3/out", "./mpi", 0.01f);
+                System.out.println("Done. Exit code: " + returnCode);
 
                 // recover the files from the nodes
 
@@ -74,5 +78,48 @@ public class Server extends Thread {
             size -= bytes;
         }
         fileOutputStream.close();
+    }
+
+    /*
+    Launches the Dwm processes (redirecting its IO) and waits for all to exit.
+    numProcesses is the number of processes to launch (must be the same size of the ips array or this will break). you can also pass the ips array directly if it has the hostnames
+    hosts is a String array containing the hostnames of the nodes
+    interfaces is a String array with the interfaces MPI will use to communicate
+    workingDir is the path to the working directory (on the nodes)
+    executable is the name of the executable (relative to workingDir to run)
+    executionTime is the amount to run the DWM algorithm for
+
+    Returns the mpirun process exit code.
+    */
+    public static int launchDWMProcesses(Integer numProcesses, String[] hosts, String[] interfaces,
+                                         String workingDir, String executable, Float executionTime)
+            throws IOException, InterruptedException {
+        String hoststr = "";
+        for (int i = 0; i < hosts.length; i++) {
+            if (i == hosts.length - 1) {
+                hoststr += hosts[i];
+            }
+            else {
+                hoststr += String.format("%s,", hosts[i]);
+            }
+        }
+
+        String intstr = "";
+        for (int i = 0; i < interfaces.length; i++) {
+            if (i == interfaces.length - 1) {
+                intstr += interfaces[i];
+            }
+            else {
+                intstr += String.format("%s,", interfaces[i]);
+            }
+        }
+
+        Process p = new ProcessBuilder("mpirun", "-np", numProcesses.toString(), "--mca",
+                "btl_tcp_if_include", intstr, "-host", hoststr,
+                "--rank-by", "node", "-wdir", workingDir,
+                executable, executionTime.toString()).inheritIO()
+                .start();
+        
+        return p.waitFor();
     }
 }
