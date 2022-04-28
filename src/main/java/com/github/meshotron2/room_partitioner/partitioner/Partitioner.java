@@ -3,7 +3,18 @@ package com.github.meshotron2.room_partitioner.partitioner;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Set of methods to partition a dwm file into several partitions.
+ */
 public interface Partitioner {
+    /**
+     * Finds the best way to partition a room into n pieces
+     *
+     * @param room         The room to be partitioned
+     * @param partitionCnt The number of partitionsto divide the room in
+     * @return A list of the room's partitions
+     * @throws IOException From {@link #partition(Room, List)}
+     */
     static List<Partition> autoPartition(Room room, int partitionCnt) throws IOException {
         final List<Partition> partitions = autoPartition(room.getX(), room.getY(), room.getZ(), partitionCnt);
 
@@ -12,6 +23,16 @@ public interface Partitioner {
         return partitions;
     }
 
+    /**
+     * Partitions the room given the number of divisions along each axis
+     *
+     * @param room The room to be partitioned
+     * @param xDiv The number of diisions along the x axis
+     * @param yDiv The number of diisions along the y axis
+     * @param zDiv The number of diisions along the z axis
+     * @return A list of the room's partitions
+     * @throws IOException From {@link #partition(Room, List)}
+     */
     static List<Partition> manualPartition(Room room, int xDiv, int yDiv, int zDiv) throws IOException {
         final List<Partition> partitions = manualPartition(room.getX(), room.getY(), room.getZ(), xDiv, yDiv, zDiv);
 
@@ -20,6 +41,13 @@ public interface Partitioner {
         return partitions;
     }
 
+    /**
+     * Writes the various partitions of the room into their respective files.
+     *
+     * @param original   The room to write
+     * @param partitions The partitions in which it is divided
+     * @throws IOException From the various write methods from {@link Room}
+     */
     private static void partition(Room original, List<Partition> partitions) throws IOException {
         final String roomPrefix = original.getFileName().substring(0, original.getFileName().lastIndexOf(".dwm"));
         for (int p = 0; p < partitions.size(); p++) {
@@ -44,6 +72,17 @@ public interface Partitioner {
         System.out.println("Finished");
     }
 
+    /**
+     * Determines the partitions in which a cuboid should be divided given the amount of divisions in each axis
+     *
+     * @param xs   The cuboid's length along the x axis
+     * @param ys   The cuboid's length along the y axis
+     * @param zs   The cuboid's length along the z axis
+     * @param xDiv The amount of divisions along the x axis
+     * @param yDiv The amount of divisions along the y axis
+     * @param zDiv The amount of divisions along the z axis
+     * @return A list with the partitions
+     */
     private static List<Partition> manualPartition(int xs, int ys, int zs, int xDiv, int yDiv, int zDiv) {
         final PartitionTrees trees = new PartitionTrees(new Node(xs), new Node(ys), new Node(zs));
 
@@ -76,6 +115,15 @@ public interface Partitioner {
         return partitions;
     }
 
+    /**
+     * Determines the best way to partition a cuboid into i pieces
+     *
+     * @param xs The cuboid's length along the x axis
+     * @param ys The cuboid's length along the y axis
+     * @param zs The cuboid's length along the z axis
+     * @param i  The number of partitions the cuboid has
+     * @return A list with the partitions
+     */
     private static List<Partition> autoPartition(int xs, int ys, int zs, int i) {
         final long start = System.nanoTime();
 

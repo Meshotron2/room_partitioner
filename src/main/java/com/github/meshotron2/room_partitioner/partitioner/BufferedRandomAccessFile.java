@@ -3,8 +3,7 @@ package com.github.meshotron2.room_partitioner.partitioner;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public class BufferedRandomAccessFile extends RandomAccessFile
-{
+public class BufferedRandomAccessFile extends RandomAccessFile {
     private final byte[] buffer;
     private long firstCachedPos;
     private long lastCachedPos;
@@ -12,9 +11,8 @@ public class BufferedRandomAccessFile extends RandomAccessFile
     private final int maxBufferSize;
     private int bufferSize;
     private int lastBufferPos;
-    
-    public BufferedRandomAccessFile(String fileName, int bufferSize) throws IOException
-    {
+
+    public BufferedRandomAccessFile(String fileName, int bufferSize) throws IOException {
         super(fileName, "rw");
         buffer = new byte[bufferSize];
         firstCachedPos = -1;
@@ -25,17 +23,12 @@ public class BufferedRandomAccessFile extends RandomAccessFile
         lastBufferPos = -1;
     }
 
-    public void writeByte(byte b, long pos) throws IOException
-    {        
-        if(!isPositionCached(pos))
-        {
-            if(pos > super.length() - 1)
-            {
+    public void writeByte(byte b, long pos) throws IOException {
+        if (!isPositionCached(pos)) {
+            if (pos > super.length() - 1) {
                 writeBuffer();
                 extendFile(pos);
-            }
-            else
-            {
+            } else {
                 writeBuffer();
                 fillBuffer(pos);
             }
@@ -45,17 +38,12 @@ public class BufferedRandomAccessFile extends RandomAccessFile
         lastBufferPos = (int) (pos - firstCachedPos);
     }
 
-    public byte readByte(long pos) throws IOException
-    {
-        if(!isPositionCached(pos))
-        {
-            if(pos > super.length() - 1)
-            {
+    public byte readByte(long pos) throws IOException {
+        if (!isPositionCached(pos)) {
+            if (pos > super.length() - 1) {
                 writeBuffer();
                 extendFile(pos);
-            }
-            else
-            {
+            } else {
                 writeBuffer();
                 fillBuffer(pos);
             }
@@ -65,19 +53,16 @@ public class BufferedRandomAccessFile extends RandomAccessFile
     }
 
     @Override
-    public void close() throws IOException
-    {
+    public void close() throws IOException {
         writeBuffer();
         super.close();
     }
 
-    private boolean isPositionCached(long pos)
-    {
+    private boolean isPositionCached(long pos) {
         return pos >= firstCachedPos && pos <= lastCachedPos;
     }
 
-    private void extendFile(long pos) throws IOException
-    {
+    private void extendFile(long pos) throws IOException {
         super.seek(pos);
         bufferSize = maxBufferSize;
         firstCachedPos = pos;
@@ -85,24 +70,20 @@ public class BufferedRandomAccessFile extends RandomAccessFile
         lastBufferPos = 0;
     }
 
-    private void fillBuffer(long pos) throws IOException
-    {
+    private void fillBuffer(long pos) throws IOException {
         super.seek(pos);
         bufferSize = super.read(buffer);
 
-        if(bufferSize > 0)
-        {
+        if (bufferSize > 0) {
             firstCachedPos = pos;
             lastCachedPos = pos + bufferSize - 1;
         }
     }
 
-    private void writeBuffer() throws IOException
-    {
-        if(bufferSize > 0 && lastBufferPos > 0)
-        {
+    private void writeBuffer() throws IOException {
+        if (bufferSize > 0 && lastBufferPos > 0) {
             super.seek(firstCachedPos);
-            super.write(buffer, 0, lastBufferPos+1);
+            super.write(buffer, 0, lastBufferPos + 1);
             lastBufferPos = 0;
             bufferSize = 0;
         }

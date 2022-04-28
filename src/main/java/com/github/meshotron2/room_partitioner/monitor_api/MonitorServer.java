@@ -14,7 +14,11 @@ import java.net.Socket;
 import java.util.*;
 
 /**
- * with help from
+ * TCP server that communicates with each monitor instance.
+ *
+ * Receives the PCM files and updates on the room processing.
+ *
+ * With help from:
  * <ul>
  * <li><a href=https://www.codejava.net/java-se/networking/java-socket-server-examples-tcp-ip>codejava.net</a></li>
  * <li><a href=https://www.geeksforgeeks.org/multithreading-in-java/>geeksforgeeks.com</a></li>
@@ -23,8 +27,14 @@ import java.util.*;
  */
 @Component
 public class MonitorServer extends Thread {
+    /**
+     * Port to bind the server to
+     */
     public static final int PORT = 8888;
 
+    /**
+     * Data structure to store all the cluster's state.
+     */
     private final DataAggregate data;
 
     public MonitorServer(@Autowired DataAggregate data) {
@@ -32,6 +42,14 @@ public class MonitorServer extends Thread {
     }
 
 
+    /**
+     * Starts the server and awaits for connections.
+     *
+     * Connections should be in JSON format.
+     * When a new connection is established, the data is parsed and then treated according to it's class.
+     *
+     * The data is parsed by {@link MonitorDeserializer}.
+     */
     public void run() {
         try (final ServerSocket serverSocket = new ServerSocket(PORT)) {
 
@@ -88,6 +106,9 @@ public class MonitorServer extends Thread {
         }
     }
 
+    /**
+     * Prints the {@link MonitorData} object.
+     */
     private void write() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         System.out.println(gson.toJson(data));

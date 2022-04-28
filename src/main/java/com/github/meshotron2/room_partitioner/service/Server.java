@@ -5,32 +5,46 @@ import com.github.meshotron2.room_partitioner.partitioner.Partition;
 import com.github.meshotron2.room_partitioner.partitioner.Partitioner;
 import com.github.meshotron2.room_partitioner.partitioner.Room;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.css.Counter;
 
-import javax.servlet.http.Part;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Server to receive dwm files from the client
+ */
 @Component
 public class Server extends Thread {
 
+    /**
+     * Name to write the received file to.
+     * <p>
+     * This program assumes only one room will be processed at a time.
+     */
     public static final String FILE_NAME = "placeholder.dwm";
 
+    /**
+     * Hack to implement all the cluster's nodes' ips
+     */
     private String[] ips;
 
+    /**
+     * Hack to implement all the cluster's nodes' ips
+     *
+     * @param ips ips of every cluster node
+     */
     public void setIps(String[] ips) {
         this.ips = ips;
         System.out.println("The ips are: " + Arrays.toString(ips));
     }
 
+    /**
+     * Receives the files from the client
+     */
     public void run() {
 
         final AtomicInteger cnt = new AtomicInteger();
@@ -74,13 +88,13 @@ public class Server extends Thread {
     }
 
     /**
-     * @param fileName
-     * @param dataInputStream
-     * @param cnt
+     * @param fileName        the name of the file to write to
+     * @param dataInputStream the input stream to read the file from
+     * @param cnt             the counter that keeps track of the number of files received
      * @return `true` if it was a dwm file, false if it was a pcm
-     * @throws Exception
+     * @throws IOException if anything goes wrong when writing to the file
      */
-    private boolean receiveFile(String fileName, DataInputStream dataInputStream, AtomicInteger cnt) throws Exception {
+    private boolean receiveFile(String fileName, DataInputStream dataInputStream, AtomicInteger cnt) throws IOException {
         System.out.println("FILEEEEEEEE");
         int bytes;
 

@@ -1,7 +1,6 @@
 package com.github.meshotron2.room_partitioner.partitioner;
 
-public class Partition 
-{
+public class Partition {
     private final int xi;
     private final int xf;
     private final int yi;
@@ -12,8 +11,7 @@ public class Partition
     private int id;
     private int currentID;
 
-    public Partition(int id, int xi, int xf, int yi, int yf, int zi, int zf)
-    {
+    public Partition(int id, int xi, int xf, int yi, int yf, int zi, int zf) {
         this.xi = xi;
         this.xf = xf;
         this.yi = yi;
@@ -25,33 +23,27 @@ public class Partition
         this.currentID = 0;
     }
 
-    public int getXi()
-    {
+    public int getXi() {
         return xi;
     }
 
-    public int getXf()
-    {
+    public int getXf() {
         return xf;
     }
 
-    public int getYi()
-    {
+    public int getYi() {
         return yi;
     }
 
-    public int getYf()
-    {
+    public int getYf() {
         return yf;
     }
 
-    public int getZi()
-    {
+    public int getZi() {
         return zi;
     }
 
-    public int getZf()
-    {
+    public int getZf() {
         return zf;
     }
 
