@@ -3,6 +3,7 @@ package com.github.meshotron2.room_partitioner.monitor_api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -30,7 +31,8 @@ public class MonitorServer extends Thread {
     /**
      * Port to bind the server to
      */
-    public static final int PORT = 8888;
+    @Value("${monitorServer.port}")
+    private int port;
 
     /**
      * Data structure to store all the cluster's state.
@@ -51,7 +53,7 @@ public class MonitorServer extends Thread {
      * The data is parsed by {@link MonitorDeserializer}.
      */
     public void run() {
-        try (final ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (final ServerSocket serverSocket = new ServerSocket(port)) {
 
             while (true) {
                 final Socket socket = serverSocket.accept();

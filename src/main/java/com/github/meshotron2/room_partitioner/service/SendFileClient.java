@@ -19,10 +19,11 @@ public interface SendFileClient {
      *
      * @param fileName File to send
      * @param ip Destination node's ip
+     * @param port Destination node's port
      */
-    static void send(String fileName, String ip) {
+    static void send(String fileName, String ip, int port) {
         System.out.println("SEND");
-        try (final Socket socket = new Socket(ip, 49153)) {
+        try (final Socket socket = new Socket(ip, port)) {
             final DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
             sendFile(fileName, dataOutputStream); // colocar caminho do ficheiro

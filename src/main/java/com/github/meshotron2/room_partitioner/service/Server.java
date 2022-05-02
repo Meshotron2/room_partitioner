@@ -4,13 +4,13 @@ import com.github.meshotron2.room_partitioner.merger.Merger;
 import com.github.meshotron2.room_partitioner.partitioner.Partition;
 import com.github.meshotron2.room_partitioner.partitioner.Partitioner;
 import com.github.meshotron2.room_partitioner.partitioner.Room;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,52 +21,52 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server extends Thread {
 
     /**
-     * Name to write the received file to.
+     * Name to write the received dmw file to.
      * <p>
      * This program assumes only one room will be processed at a time.
      */
-    public static final String FILE_NAME = "placeholder.dwm";
+    @Value("${fileNames.dwm}")
+    private String fileName;
 
     /**
-     * Hack to implement all the cluster's nodes' ips
+     * All the cluster's nodes' ips
      */
+    @Value("${cluster.ips}")
     private String[] ips;
 
-    /**
-     * Hack to implement all the cluster's nodes' ips
-     *
-     * @param ips ips of every cluster node
-     */
-    public void setIps(String[] ips) {
-        this.ips = ips;
-        System.out.println("The ips are: " + Arrays.toString(ips));
-    }
+    @Value("${clientServer.port}")
+    private int port;
+
+    @Value("${monitorFileServer.port}")
+    private int monitorFilePort;
 
     /**
      * Receives the files from the client
      */
     public void run() {
 
+        System.out.println("THE PORT IS " + port);
+
         final AtomicInteger cnt = new AtomicInteger();
         final int partitionCnt = 2;
 
         List<Partition> partitions = new ArrayList<>();
 
-        try (final ServerSocket serverSocket = new ServerSocket(5000)) {
-            System.out.println("listening to port:5000");
+        try (final ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("listening to port:" + port);
             while (true) {
                 final Socket clientSocket = serverSocket.accept();
                 System.out.println(clientSocket + " connected.");
                 final DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
                 final DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-                if (receiveFile(FILE_NAME, dataInputStream, cnt)) {
+                if (receiveFile(fileName, dataInputStream, cnt)) {
 
-                    final Room r = Room.fromFile(FILE_NAME);
+                    final Room r = Room.fromFile(fileName);
                     partitions = Partitioner.autoPartition(r, partitionCnt);
 
                     for (int i = 0; i < partitionCnt; i++) {
-                        SendFileClient.send(String.format("placeholder_%d.dwm", i), ips[i]);
+                        SendFileClient.send(String.format("placeholder_%d.dwm", i), ips[i], monitorFilePort);
                     }
 
                     // launch dwm processes here and wait for them to finish
@@ -75,7 +75,7 @@ public class Server extends Thread {
 
                     // merge
                     if (partitions.size() == partitionCnt)
-                        Merger.merge("./", FILE_NAME, 221, partitions);
+                        Merger.merge("./", fileName, 221, partitions);
                 }
 
                 dataInputStream.close();
