@@ -140,16 +140,18 @@ public class Server extends Thread {
         }
     }
 
-    /*
+    /**
     Launches the Dwm processes (redirecting its IO) and waits for all to exit.
-    numProcesses is the number of processes to launch (must be the same size of the ips array or this will break). you can also pass the ips array directly if it has the hostnames
-    hosts is a String array containing the hostnames of the nodes
-    interfaces is a String array with the interfaces MPI will use to communicate
-    workingDir is the path to the working directory (on the nodes)
-    executable is the name of the executable (relative to workingDir to run)
-    executionTime is the amount to run the DWM algorithm for
 
-    Returns the mpirun process exit code.
+    @param numProcesses The number of processes to launch (must be the same size of the ips array or this will break). you can also pass the ips array directly if it has the hostnames
+    @param hosts A String array containing the hostnames of the nodes
+    @param interfaces A String array with the interfaces MPI will use to communicate
+    @param workingDir The path to the working directory (on the nodes)
+    @param executable The name of the executable (relative to workingDir to run)
+    @param executionTime The amount to run the DWM algorithm for
+    @returns The mpirun process exit code.
+    @throws IOException
+    @throws InterruptedException
     */
     public static int launchDWMProcesses(Integer numProcesses, String[] hosts, String[] interfaces,
                                          String workingDir, String executable, Float executionTime)
