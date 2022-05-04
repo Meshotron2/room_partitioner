@@ -1,5 +1,8 @@
 package com.github.meshotron2.room_partitioner.partitioner;
 
+/**
+ * Contains tree Nodes representing the roots of each axis partition tree
+ */
 public class PartitionTrees {
     private final Node xRoot;
     private final Node yRoot;

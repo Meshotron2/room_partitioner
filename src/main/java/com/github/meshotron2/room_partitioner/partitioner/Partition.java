@@ -1,5 +1,8 @@
 package com.github.meshotron2.room_partitioner.partitioner;
 
+/**
+ * Represents a 3 Dimensional partition.
+ */
 public class Partition {
     private final int xi;
     private final int xf;

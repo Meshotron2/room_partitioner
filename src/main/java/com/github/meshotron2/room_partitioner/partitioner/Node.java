@@ -3,6 +3,9 @@ package com.github.meshotron2.room_partitioner.partitioner;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A very basic / barebones Tree implementation in Java.
+ */
 public class Node {
     private final ArrayList<Node> children;
     private final int value;

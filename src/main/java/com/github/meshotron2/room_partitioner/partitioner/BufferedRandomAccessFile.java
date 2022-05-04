@@ -3,6 +3,9 @@ package com.github.meshotron2.room_partitioner.partitioner;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+/**
+ * A basic and incomplete implementation od a bufered random access file.
+ */
 public class BufferedRandomAccessFile extends RandomAccessFile {
     private final byte[] buffer;
     private long firstCachedPos;
@@ -12,6 +15,10 @@ public class BufferedRandomAccessFile extends RandomAccessFile {
     private int bufferSize;
     private int lastBufferPos;
 
+    /**
+     * @param fileName The name of the file to open/create.
+     * @param buffferSize The size of the buffer. This affects performance. 4096 is fine.
+     */
     public BufferedRandomAccessFile(String fileName, int bufferSize) throws IOException {
         super(fileName, "rw");
         buffer = new byte[bufferSize];
@@ -23,6 +30,12 @@ public class BufferedRandomAccessFile extends RandomAccessFile {
         lastBufferPos = -1;
     }
 
+    /**
+     * Writes a byte in the specified position. If the position is beyond the end of the file the file will be extended with 0s.
+     * 
+     * @param b The byte to write.
+     * @param pos The position to write at.
+     */
     public void writeByte(byte b, long pos) throws IOException {
         if (!isPositionCached(pos)) {
             if (pos > super.length() - 1) {
@@ -38,6 +51,11 @@ public class BufferedRandomAccessFile extends RandomAccessFile {
         lastBufferPos = (int) (pos - firstCachedPos);
     }
 
+    /**
+     * Reads a byte at a given position.
+     * 
+     * @param pos The position to read from.
+     */
     public byte readByte(long pos) throws IOException {
         if (!isPositionCached(pos)) {
             if (pos > super.length() - 1) {

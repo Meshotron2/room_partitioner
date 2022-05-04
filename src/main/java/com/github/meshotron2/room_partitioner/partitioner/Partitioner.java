@@ -167,6 +167,18 @@ public interface Partitioner {
         return partitions;
     }
 
+    /**
+     * Calculates the ideal tree of partitions.
+     *
+     * @param trees A ParitionTrees object containing the roots of the X, Y and Z azis
+     * @param i The number of partitions desired
+     */
+
+    // This way the partitions are determined in this implementation is slightly overengineered but it works. Simplifying it wouldn't produce any
+    // measurable gains in performance.
+    // You could do this simply by determining the amount you need to divide each axis by and then dividing the axis only once 
+    // i.e. instead of dividing X by 3 and then 2 you'd simply divide it by 6. You could also do this without using trees and just calculating 3 lists.
+    
     private static void partitionInternal(PartitionTrees trees, int i) {
         if (i < 2) return;
 
@@ -207,6 +219,23 @@ public interface Partitioner {
         }
     }
 
+    /**
+     * Divides the value in root by r creating r children to root with value / r.
+     * This function handles uneven divisions in the best way possible.
+     * 
+     * Ex:
+     * Suppose root is a Node with value 46 and r is 3. The resulting tree will be:
+     *                           (46)
+     *                           / | \
+     *                          /  |  \
+     *                         /   |   \
+     *                        /    |    \
+     *                       /     |     \
+     *                     (16)   (15)  (15)
+     *
+     * @param root The root of the tree to partition
+     * @param r The number of children to create (and to divide the value in root by)
+     */
     private static void partitionTree(Node root, int r) {
         int rem = root.getValue() % r;
         for (int j = 0; j < r; j++) {
@@ -221,6 +250,12 @@ public interface Partitioner {
         }
     }
 
+    /**
+     * Determines the smallest divisible number (except 1) to a given number.
+     *
+     * @param n The number to find the smalles divisible number
+     * @return The smallest number divisible by n
+     */
     private static int findNextRoot(int n) {
         int r = 2;
         while (n % r != 0) {
