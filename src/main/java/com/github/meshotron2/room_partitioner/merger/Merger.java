@@ -11,27 +11,37 @@ public class Merger {
     private static final byte SRC_NODE = 0x53;
     private static final byte RECVR_NODE = 0x52;
 
-    /*
-    Same as the next method but takes a List instead of an array
-    */
+    /**
+     * Merges all receiver files into a single file readable by the visualizer.
+     *
+     * @param rootpath The base path were we expect the receiver file folders to be Ex:
+     * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
+     * ./1 and ./2 each containing the receiver files for a partition.
+     *   
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to the rootPath
+     * @param iterations The number of iterations the simulation ran for (this could be inferred from the receiver file lengths but...)
+     * @param partitions A List<Partition> containing the partitions returned by the partitioner
+     * @return The name of the created merged file
+     * @throws IOException
+     */
     public static String merge(String rootPath, String roomFileName, int iterations, List<Partition> partitions) throws IOException {
         return merge(rootPath, roomFileName, iterations, (Partition[]) partitions.toArray());
     }
 
 
-    /*
-    Merges all receiver files into a single file readable by the visualizer.
-    
-    rootpath is the base path were we expect the receiver file folders to be Ex:
-    Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
-    ./1 and ./2 each containing the receiver files for a partition.
-
-    roomFileName is the name of the roomFile used in the DWM simulation relative to the rootPath
-
-    iterations is the number of iterations the simulation ran for (this could be inferred from the receiver file lengths but...)
-
-    partitions is a Partition array containing the partitions returned by the partitioner
-    */
+    /**
+     * Merges all receiver files into a single file readable by the visualizer.
+     *
+     * @param rootpath The base path were we expect the receiver file folders to be Ex:
+     * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
+     * ./1 and ./2 each containing the receiver files for a partition.
+     *   
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to the rootPath
+     * @param iterations The number of iterations the simulation ran for (this could be inferred from the receiver file lengths but...)
+     * @param partitions A Partition array containing the partitions returned by the partitioner
+     * @return The name of the created merged file.
+     * @throws IOException
+     */
     public static String merge(String rootPath, String roomFileName, int iterations, Partition[] partitions) throws IOException {
         if (rootPath == null) throw new IllegalArgumentException("rootPath cannot be null");
         if (roomFileName == null) throw new IllegalArgumentException("roomFileName cannot be null");
@@ -103,11 +113,14 @@ public class Merger {
         return mergedFileName;
     }
 
-    /*
-    Looks for every single level (in the Z axis) were there are receivers.
-    Returns a Dictionary containing the heights and a BufferedOutputStream were to write data.
-    The caller is responsible for closing this BufferedOutputStreams after he's done.
-    */
+    /**
+     * Looks for every single level (in the Z axis) were there are receivers.
+     * The caller is responsible for closing this BufferedOutputStreams after he's done
+     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #merge(String, String, int, Partition[]) merge} for more info.
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to rootPath
+     * @return A Dictionary containing the heights and a BufferedOutputStream were to write data.
+     * @throws IOException
+     */
     private static Dictionary<Integer, BufferedOutputStream> getReceiverLevels(String rootPath, String roomFileName) throws IOException {
         BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
 
@@ -145,9 +158,13 @@ public class Merger {
         return levels;
     }
 
-    /*
-    Returns the height (in the Z axis) of the first receiver found.
-    */
+    /**
+     * Returns the height (in the Z axis) of the first receiver found.
+     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #merge(String, String, int, Partition[]) merge} for more info.
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to rootPath
+     * @return the height of the first found receiver or -1 if none was found
+     * @throws IOException
+     */
     private static int getFirstReceiverLevel(String rootPath, String roomFileName) throws IOException {
         BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
 
@@ -174,9 +191,9 @@ public class Merger {
         return -1; //none found
     }
 
-    /*
-    Combines two file paths together
-    */
+    /**
+     * Combines two file paths together
+     */
     private static String CombinePath(String rootPath, String filename) {
         return String.format("%s/%s", rootPath, filename);
     }
