@@ -2,6 +2,7 @@ package com.github.meshotron2.room_partitioner.partitioner;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 /**
  * A basic and incomplete implementation od a bufered random access file.
@@ -48,7 +49,10 @@ public class BufferedRandomAccessFile extends RandomAccessFile {
         }
 
         buffer[(int) (pos - firstCachedPos)] = b;
-        lastBufferPos = (int) (pos - firstCachedPos);
+
+        if((int) (pos - firstCachedPos) > lastBufferPos) {
+            lastBufferPos = (int) (pos - firstCachedPos);
+        }
     }
 
     /**
@@ -82,6 +86,7 @@ public class BufferedRandomAccessFile extends RandomAccessFile {
 
     private void extendFile(long pos) throws IOException {
         super.seek(pos);
+        Arrays.fill(buffer, (byte)0);
         bufferSize = maxBufferSize;
         firstCachedPos = pos;
         lastCachedPos = pos + maxBufferSize - 1;
