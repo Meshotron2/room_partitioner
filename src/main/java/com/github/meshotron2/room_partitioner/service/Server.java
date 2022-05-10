@@ -12,7 +12,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Server to receive dwm files from the client
@@ -34,15 +33,27 @@ public class Server extends Thread {
     @Value("${cluster.ips}")
     private String[] ips;
 
+    /**
+     * Port to bind the file server to
+     */
     @Value("${clientServer.port}")
     private int port;
 
+    /**
+     * Port of the monitor's file server
+     */
     @Value("${monitorFileServer.port}")
     private int monitorFilePort;
 
+    /**
+     * Number of processes on the MPI cluster
+     */
     @Value("${merger.processes}")
     private int numProcesses;
 
+    /**
+     * Number of iterations ran by the cluster
+     */
     @Value("${merger.iterations}")
     private int iterations;
 
@@ -50,10 +61,8 @@ public class Server extends Thread {
      * Receives the files from the client
      */
     public void run() {
-
         System.out.println("THE PORT IS " + port);
 
-        final AtomicInteger cnt = new AtomicInteger();
         final int partitionCnt = 2;
 
         List<Partition> partitions = new ArrayList<>();
@@ -61,18 +70,13 @@ public class Server extends Thread {
         try (final ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("listening to port:" + port);
 
-//            // launch dwm processes here and wait for them to finish
-//            System.out.println("Launching DWM processes...");
-//            int returnCode = launchDWMProcesses(numProcesses, this.ips, new String[]{"usb0"}, "/home/pi/M3/out", "./mpi", 0.01f);
-//            System.out.println("Done. Exit code: " + returnCode);
-
             while (true) {
                 final Socket clientSocket = serverSocket.accept();
                 System.out.println(clientSocket + " connected.");
                 final DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
                 final DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-                if (receiveFile(fileName, dataInputStream, cnt)) {
+                if (receiveFile(fileName, dataInputStream)) {
                     // DWM
                     final Room r = Room.fromFile(fileName);
                     partitions = Partitioner.autoPartition(r, partitionCnt);
@@ -82,29 +86,14 @@ public class Server extends Thread {
                     }
 
                     // launch dwm processes here and wait for them to finish
-                    // ...
+                    System.out.println("Launching DWM processes...");
+                    int returnCode = launchDWMProcesses(numProcesses, this.ips, new String[]{"usb0"}, "/home/pi/M3/out", "./mpi", 0.01f);
+                    System.out.println("Done. Exit code: " + returnCode);
                 } else if (partitions.size() > 0) {
                     // PCM
-                    // recover the files from the nodes
-
-//                    // merge
-//                    if (partitions.size() == partitionCnt)
-//                        Merger.merge("./", fileName, iterations, partitions);
-
-                    // recover the files from the nodes
                     // merge
                     Merger.merge("./", fileName, iterations, partitions);
                 }
-
-//                // launch dwm processes here and wait for them to finish
-//                System.out.println("Launching DWM processes...");
-//                int returnCode = launchDWMProcesses(numProcesses, this.ips, new String[]{"usb0"}, "/home/pi/M3/out", "./mpi", 0.01f);
-//                System.out.println("Done. Exit code: " + returnCode);
-
-//                // recover the files from the nodes
-//
-//                // merge
-//                Merger.merge("./", fileName, 221, partitions);
 //
                 dataInputStream.close();
                 dataOutputStream.close();
@@ -118,11 +107,10 @@ public class Server extends Thread {
     /**
      * @param fileName        the name of the file to write to
      * @param dataInputStream the input stream to read the file from
-     * @param cnt             the counter that keeps track of the number of files received
      * @return `true` if it was a dwm file, false if it was a pcm
      * @throws IOException if anything goes wrong when writing to the file
      */
-    private boolean receiveFile(String fileName, DataInputStream dataInputStream, AtomicInteger cnt) throws IOException {
+    private boolean receiveFile(String fileName, DataInputStream dataInputStream) throws IOException {
         int bytes;
 
         byte type = dataInputStream.readByte();
@@ -150,8 +138,7 @@ public class Server extends Thread {
             final File f = new File(String.format("./%d/", type));
             f.mkdir();
 
-            for(int i = 0; i < fileCnt; i++)
-            {
+            for (int i = 0; i < fileCnt; i++) {
                 final byte[] file = dataInputStream.readNBytes(fileSize);
 
                 final FileOutputStream out = new FileOutputStream(String.format("./%d/receiver_%d.pcm", type, i));
@@ -159,26 +146,6 @@ public class Server extends Thread {
                 out.close();
             }
             return false;
-
-//            final int fileSize = 4 * iterations;
-//
-//            final String folder = String.valueOf(type);
-//            int i1 = 0;
-//            while (i1++ < 1000000) {
-//                final String fName = "./" + folder + "/receiver_" + cnt.getAndIncrement() + ".pcm";
-//                new File(fName).getParentFile().mkdirs();
-//                final FileOutputStream fileOutputStream = new FileOutputStream(fName);
-//
-//                byte[] buffer = new byte[fileSize];
-//                int i = fileSize;
-//                while (i > 0 && (bytes = dataInputStream.read(buffer, 0, i)) != -1) {
-//                    fileOutputStream.write(buffer, 0, bytes);
-//                    i -= bytes;
-//                }
-//
-//                fileOutputStream.close();
-//            }
-//            return false;
         }
     }
 
@@ -192,32 +159,32 @@ public class Server extends Thread {
      * @param executable    The name of the executable (relative to workingDir to run)
      * @param executionTime The amount to run the DWM algorithm for
      * @return The mpirun process exit code.
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException          When something goes wrong in {@link ProcessBuilder#start()}
+     * @throws InterruptedException When something goes wrong in {@link Process#waitFor()}
      */
     public static int launchDWMProcesses(Integer numProcesses, String[] hosts, String[] interfaces,
                                          String workingDir, String executable, Float executionTime)
             throws IOException, InterruptedException {
-        String hoststr = "";
+        StringBuilder hoststr = new StringBuilder();
         for (int i = 0; i < hosts.length; i++) {
             if (i == hosts.length - 1) {
-                hoststr += hosts[i];
+                hoststr.append(hosts[i]);
             } else {
-                hoststr += String.format("%s,", hosts[i]);
+                hoststr.append(String.format("%s,", hosts[i]));
             }
         }
 
-        String intstr = "";
+        StringBuilder intstr = new StringBuilder();
         for (int i = 0; i < interfaces.length; i++) {
             if (i == interfaces.length - 1) {
-                intstr += interfaces[i];
+                intstr.append(interfaces[i]);
             } else {
-                intstr += String.format("%s,", interfaces[i]);
+                intstr.append(String.format("%s,", interfaces[i]));
             }
         }
 
         Process p = new ProcessBuilder("mpirun", "-np", numProcesses.toString(), "--mca",
-                "btl_tcp_if_include", intstr, "-host", hoststr,
+                "btl_tcp_if_include", intstr.toString(), "-host", hoststr.toString(),
                 "--rank-by", "node", "-wdir", workingDir,
                 executable, executionTime.toString()).inheritIO()
                 .start();
