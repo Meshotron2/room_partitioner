@@ -1,6 +1,7 @@
 *.xml
 !pom.xml
 *.dwm
+*.pcm
 /target
 /.idea/
 *.iml
