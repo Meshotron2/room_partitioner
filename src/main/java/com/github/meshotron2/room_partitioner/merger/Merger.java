@@ -25,7 +25,7 @@ public class Merger {
      * @throws IOException
      */
     public static String merge(String rootPath, String roomFileName, int iterations, List<Partition> partitions) throws IOException {
-        return merge(rootPath, roomFileName, iterations, (Partition[]) partitions.toArray());
+        return merge(rootPath, roomFileName, iterations, partitions.toArray(new Partition[0]));
     }
 
 
