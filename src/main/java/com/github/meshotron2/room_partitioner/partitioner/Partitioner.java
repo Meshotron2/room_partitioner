@@ -10,15 +10,16 @@ public interface Partitioner {
     /**
      * Finds the best way to partition a room into n pieces
      *
+     * @param rootPath   The path where partition room files will be written to
      * @param room         The room to be partitioned
      * @param partitionCnt The number of partitionsto divide the room in
      * @return A list of the room's partitions
      * @throws IOException From {@link #partition(Room, List)}
      */
-    static List<Partition> autoPartition(Room room, int partitionCnt) throws IOException {
+    static List<Partition> autoPartition(String rootPath, Room room, int partitionCnt) throws IOException {
         final List<Partition> partitions = autoPartition(room.getX(), room.getY(), room.getZ(), partitionCnt);
 
-        partition(room, partitions);
+        partition(rootPath, room, partitions);
 
         return partitions;
     }
@@ -26,6 +27,7 @@ public interface Partitioner {
     /**
      * Partitions the room given the number of divisions along each axis
      *
+     * @param rootPath   The path where partition room files will be written to
      * @param room The room to be partitioned
      * @param xDiv The number of diisions along the x axis
      * @param yDiv The number of diisions along the y axis
@@ -33,10 +35,10 @@ public interface Partitioner {
      * @return A list of the room's partitions
      * @throws IOException From {@link #partition(Room, List)}
      */
-    static List<Partition> manualPartition(Room room, int xDiv, int yDiv, int zDiv) throws IOException {
+    static List<Partition> manualPartition(String rootPath, Room room, int xDiv, int yDiv, int zDiv) throws IOException {
         final List<Partition> partitions = manualPartition(room.getX(), room.getY(), room.getZ(), xDiv, yDiv, zDiv);
 
-        partition(room, partitions);
+        partition(rootPath, room, partitions);
 
         return partitions;
     }
@@ -44,15 +46,16 @@ public interface Partitioner {
     /**
      * Writes the various partitions of the room into their respective files.
      *
-     * @param original   The room to write
+     * @param rootPath   The path where partition room files will be written to
+     * @param original   The room to be partitioned
      * @param partitions The partitions in which it is divided
      * @throws IOException From the various write methods from {@link Room}
      */
-    private static void partition(Room original, List<Partition> partitions) throws IOException {
+    private static void partition(String rootPath, Room original, List<Partition> partitions) throws IOException {
         final String roomPrefix = original.getFileName().substring(0, original.getFileName().lastIndexOf(".dwm"));
         for (int p = 0; p < partitions.size(); p++) {
             final Partition partition = partitions.get(p);
-            final Room partitionRoom = new Room(String.format("%s_%d.dwm", roomPrefix, p), partition.getXf() - partition.getXi() + 1, partition.getYf() - partition.getYi() + 1, partition.getZf() - partition.getZi() + 1, original.getF());
+            final Room partitionRoom = new Room(String.format("%s/%s_%d.dwm", rootPath, roomPrefix, p), partition.getXf() - partition.getXi() + 1, partition.getYf() - partition.getYi() + 1, partition.getZf() - partition.getZi() + 1, original.getF());
             partitionRoom.startWrite();
 
             int bytes = 0;
