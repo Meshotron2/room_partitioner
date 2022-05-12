@@ -71,7 +71,7 @@ public class Room {
 
         final int f = Integer.reverseBytes(roomFile.readInt());
 
-        roomFile.seek(24);
+        roomFile.seek(16);
 
         return new Room(fileName, x, y, z, f, roomFile);
     }
