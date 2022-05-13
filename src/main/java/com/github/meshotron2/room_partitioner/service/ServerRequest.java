@@ -8,7 +8,7 @@ public class ServerRequest {
     private final Semaphore sem;
     private final int totalTransfers;
 
-    public ServerRequest(String path, Thread thread, int partitionCount) {
+    public ServerRequest(String path, Thread thread, int partitionCount) throws InterruptedException {
         this.path = path;
         this.thread = thread;
         this.sem = new Semaphore(partitionCount);
