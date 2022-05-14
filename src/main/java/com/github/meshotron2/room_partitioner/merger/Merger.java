@@ -14,7 +14,7 @@ public class Merger {
     /**
      * Merges all receiver files into a single file readable by the visualizer.
      *
-     * @param rootpath The base path were we expect the receiver file folders to be Ex:
+     * @param rootPath The base path were we expect the receiver file folders to be Ex:
      * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
      * ./1 and ./2 each containing the receiver files for a partition.
      *   
@@ -36,7 +36,7 @@ public class Merger {
      * The header contains a total of 4 32 bit integers (in little-endian). The first 2 contains the dimensions (X,Y), 
      * the third contains the frequency and the last the number of iterations.
      *
-     * @param rootpath The base path were we expect the receiver file folders to be Ex:
+     * @param rootPath The base path were we expect the receiver file folders to be Ex:
      * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
      * ./1 and ./2 each containing the receiver files for a partition.
      *   
