@@ -18,7 +18,7 @@ public class BufferedRandomAccessFile extends RandomAccessFile {
 
     /**
      * @param fileName The name of the file to open/create.
-     * @param buffferSize The size of the buffer. This affects performance. 4096 is fine.
+     * @param bufferSize The size of the buffer. This affects performance. 4096 is fine.
      */
     public BufferedRandomAccessFile(String fileName, int bufferSize) throws IOException {
         super(fileName, "rw");
