@@ -4,6 +4,7 @@ import com.github.meshotron2.room_partitioner.merger.Merger;
 import com.github.meshotron2.room_partitioner.partitioner.Partition;
 import com.github.meshotron2.room_partitioner.partitioner.Partitioner;
 import com.github.meshotron2.room_partitioner.partitioner.Room;
+import com.github.meshotron2.room_partitioner.partitioner.Tuple;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,8 +12,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -113,14 +112,14 @@ public class Server extends Thread {
             }
 
             System.out.println(path);
-            final List<Partition> partitions = Partitioner.manualPartition(r, 1 , 2, 1);
+            final Tuple<List<Partition>, Character> partitioningResult = Partitioner.smartPartition(r, 1 , 2, 1);
             for (int i = 0; i < partitionCnt; i++) {
-                SendFileClient.send(String.format("%s/placeholder_%d.dwm", path, i), ips[i], monitorFilePort);
+                SendFileClient.send(String.format("%s/placeholder_processed_%d.dwm", path, i), ips[i], monitorFilePort);
             }
 
             // for some odd reason without some sort of wait here some files may have not been fully written yet.
             // why though?
-            Thread.sleep(5000);
+            Thread.sleep(10000);
 
             System.out.println("Launching DWM processes...");
             final int returnCode = launchDWMProcesses(numProcesses, this.ips, new String[]{"usb0"}, "/home/pi/M4/out", "./mpi", 0.01f);
@@ -129,7 +128,7 @@ public class Server extends Thread {
             //wait until all monitors have sent everything
             newReq.waitFor();
 
-            Merger.merge(path, fileName, iterations, partitions);
+            Merger.smartMerge(path, "placeholder_processed.dwm", iterations, partitioningResult);
 
             requestQueue.remove();
         }

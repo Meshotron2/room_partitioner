@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import com.github.meshotron2.room_partitioner.partitioner.Partition;
+import com.github.meshotron2.room_partitioner.partitioner.Tuple;
 
 public class Merger {
     private static final byte SRC_NODE = 0x53;
@@ -13,6 +14,7 @@ public class Merger {
 
     /**
      * Merges all receiver files into a single file readable by the visualizer.
+     * Assumes all receivers are at the same Z value.
      *
      * @param rootPath The base path were we expect the receiver file folders to be Ex:
      * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
@@ -25,12 +27,45 @@ public class Merger {
      * @throws IOException
      */
     public static String merge(String rootPath, String roomFileName, int iterations, List<Partition> partitions) throws IOException {
-        return merge(rootPath, roomFileName, iterations, partitions.toArray(new Partition[0]));
+        return mergeZ(rootPath, roomFileName, iterations, partitions.toArray(new Partition[0]));
+    }
+
+    /**
+     * Merges all receiver files into a single file readable by the visualizer.
+     * Given the axis where receivers are expected to be at the same level.
+     *
+     * @param rootPath The base path were we expect the receiver file folders to be Ex:
+     * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
+     * ./1 and ./2 each containing the receiver files for a partition.
+     *
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to the rootPath
+     * @param iterations The number of iterations the simulation ran for (this could be inferred from the receiver file lengths but...)
+     * @param partitionData A Tuple<List<Partition>, Character> containing the partitions returned by the partitioner and the axis where to look for receivers
+     * @return The name of the created merged file
+     * @throws IOException
+     */
+    public static String smartMerge(String rootPath, String roomFileName, int iterations, Tuple<List<Partition>, Character> partitionData) throws IOException {
+        if(partitionData.getV2() == 'Z')
+        {
+            System.out.println("Using Z as height for merging...");
+            return mergeZ(rootPath, roomFileName, iterations, partitionData.getV1().toArray(new Partition[0]));
+        }
+        else if(partitionData.getV2() == 'Y')
+        {
+            System.out.println("Using Y as height for merging...");
+            return mergeY(rootPath, roomFileName, iterations, partitionData.getV1().toArray(new Partition[0]));
+        }
+        else
+        {
+            System.out.println("Using X as height for merging...");
+            return mergeX(rootPath, roomFileName, iterations, partitionData.getV1().toArray(new Partition[0]));
+        }
     }
 
 
     /**
      * Merges all receiver files into a single file readable by the visualizer.
+     * This method assumes all receivers are at the same Z value after partitioning.
      * 
      * On success a file with .merged extension contains a header with useful information for visualization.
      * The header contains a total of 4 32 bit integers (in little-endian). The first 2 contains the dimensions (X,Y), 
@@ -46,14 +81,14 @@ public class Merger {
      * @return The name of the created merged file.
      * @throws IOException
      */
-    public static String merge(String rootPath, String roomFileName, int iterations, Partition[] partitions) throws IOException {
+    public static String mergeZ(String rootPath, String roomFileName, int iterations, Partition[] partitions) throws IOException {
         if (rootPath == null) throw new IllegalArgumentException("rootPath cannot be null");
         if (roomFileName == null) throw new IllegalArgumentException("roomFileName cannot be null");
         if (iterations <= 0) throw new IllegalArgumentException("iterations cannot be <= 0");
         if (partitions == null || partitions.length == 0)
             throw new IllegalArgumentException("partitions cannot be null or empty");
 
-        final int height = getFirstReceiverLevel(rootPath, roomFileName);
+        final int height = getFirstReceiverLevelZ(rootPath, roomFileName);
         if (height < 0) return null; // no receivers found? just leave
 
         BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
@@ -123,9 +158,197 @@ public class Merger {
     }
 
     /**
-     * Looks for every single level (in the Z axis) were there are receivers.
+     * Merges all receiver files into a single file readable by the visualizer.
+     * This method assumes all receivers are at the same X value after partitioning.
+     *
+     * On success a file with .merged extension contains a header with useful information for visualization.
+     * The header contains a total of 4 32 bit integers (in little-endian). The first 2 contains the dimensions (X,Y),
+     * the third contains the frequency and the last the number of iterations.
+     *
+     * @param rootPath The base path were we expect the receiver file folders to be Ex:
+     * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
+     * ./1 and ./2 each containing the receiver files for a partition.
+     *
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to the rootPath
+     * @param iterations The number of iterations the simulation ran for (this could be inferred from the receiver file lengths but...)
+     * @param partitions A Partition array containing the partitions returned by the partitioner
+     * @return The name of the created merged file.
+     * @throws IOException
+     */
+    public static String mergeX(String rootPath, String roomFileName, int iterations, Partition[] partitions) throws IOException {
+        if (rootPath == null) throw new IllegalArgumentException("rootPath cannot be null");
+        if (roomFileName == null) throw new IllegalArgumentException("roomFileName cannot be null");
+        if (iterations <= 0) throw new IllegalArgumentException("iterations cannot be <= 0");
+        if (partitions == null || partitions.length == 0)
+            throw new IllegalArgumentException("partitions cannot be null or empty");
+
+        final int height = getFirstReceiverLevelX(rootPath, roomFileName);
+        if (height < 0) return null; // no receivers found? just leave
+
+        BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
+
+        String mergedFileName = roomFileName.replace(".dwm", ".merged");
+        DataOutputStream mergedFileStream = new DataOutputStream(new FileOutputStream(CombinePath(rootPath, mergedFileName)));
+
+
+        // read the header
+        final int x = Integer.reverseBytes(roomFileStream.readInt(0));
+        final int y = Integer.reverseBytes(roomFileStream.readInt(4));
+        final int z = Integer.reverseBytes(roomFileStream.readInt(8));
+        final int f = Integer.reverseBytes(roomFileStream.readInt(12));
+
+        mergedFileStream.writeInt(Integer.reverseBytes(y));
+        mergedFileStream.writeInt(Integer.reverseBytes(z));
+        mergedFileStream.writeInt(Integer.reverseBytes(f));
+        mergedFileStream.writeInt(Integer.reverseBytes(iterations));
+
+        int pos = 16;
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                for (int k = 0; k < z; k++) {
+                    byte node = roomFileStream.readByte(pos++);
+
+                    DataInputStream receiverFileStream = null;
+
+                    if (node == RECVR_NODE) {
+                        // get the path for the receiver file and open it
+                        String name = Partition.getPartitionAtPos(partitions, i, j, k).getNextReceiverFileName(rootPath);
+                        receiverFileStream = new DataInputStream(new FileInputStream(name));
+
+                        // read the receiver file data and place it into the merged file
+                        byte[] buffer = receiverFileStream.readNBytes(iterations * Float.BYTES);
+                        mergedFileStream.write(buffer);
+                    } else if (i == height) {
+                        // java guarantees the array is zeroed upon initialization
+                        byte[] buffer = new byte[iterations * Float.BYTES];
+
+                        // if source write as DIRAC source. else it's a boundary node (or an unrecorded air node) so all 0s
+                        if (node == SRC_NODE) {
+                            // Integer has a reverseBytes method but Float doesn't ???
+
+                            // write 1.0f in the first iteration. supposing we're injecting DIRACs
+
+                            // keep in mind since we don't record source node pressure values, so we always
+                            // assume they're 0 after the first iteration for DIRACS even though that'll probably not be the case
+                            // seems accurate enough and hardly noticeable in most cases
+                            buffer[0] = 0x00;
+                            buffer[1] = 0x00;
+                            buffer[2] = -0x80;
+                            buffer[3] = 0x3F;
+                        }
+
+                        mergedFileStream.write(buffer);
+                    }
+
+                    if (receiverFileStream != null) receiverFileStream.close();
+                }
+            }
+        }
+
+        roomFileStream.close();
+        mergedFileStream.close();
+
+        return mergedFileName;
+    }
+
+    /**
+     * Merges all receiver files into a single file readable by the visualizer.
+     * This method assumes all receivers are at the same Y value after partitioning.
+     *
+     * On success a file with .merged extension contains a header with useful information for visualization.
+     * The header contains a total of 4 32 bit integers (in little-endian). The first 2 contains the dimensions (X,Y),
+     * the third contains the frequency and the last the number of iterations.
+     *
+     * @param rootPath The base path were we expect the receiver file folders to be Ex:
+     * Imagine you just ran the simulation with 2 nodes. This functions expects to find in the rootpath folder 2 folders:
+     * ./1 and ./2 each containing the receiver files for a partition.
+     *
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to the rootPath
+     * @param iterations The number of iterations the simulation ran for (this could be inferred from the receiver file lengths but...)
+     * @param partitions A Partition array containing the partitions returned by the partitioner
+     * @return The name of the created merged file.
+     * @throws IOException
+     */
+    public static String mergeY(String rootPath, String roomFileName, int iterations, Partition[] partitions) throws IOException {
+        if (rootPath == null) throw new IllegalArgumentException("rootPath cannot be null");
+        if (roomFileName == null) throw new IllegalArgumentException("roomFileName cannot be null");
+        if (iterations <= 0) throw new IllegalArgumentException("iterations cannot be <= 0");
+        if (partitions == null || partitions.length == 0)
+            throw new IllegalArgumentException("partitions cannot be null or empty");
+
+        final int height = getFirstReceiverLevelY(rootPath, roomFileName);
+        if (height < 0) return null; // no receivers found? just leave
+
+        BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
+
+        String mergedFileName = roomFileName.replace(".dwm", ".merged");
+        DataOutputStream mergedFileStream = new DataOutputStream(new FileOutputStream(CombinePath(rootPath, mergedFileName)));
+
+
+        // read the header
+        final int x = Integer.reverseBytes(roomFileStream.readInt(0));
+        final int y = Integer.reverseBytes(roomFileStream.readInt(4));
+        final int z = Integer.reverseBytes(roomFileStream.readInt(8));
+        final int f = Integer.reverseBytes(roomFileStream.readInt(12));
+
+        mergedFileStream.writeInt(Integer.reverseBytes(x));
+        mergedFileStream.writeInt(Integer.reverseBytes(z));
+        mergedFileStream.writeInt(Integer.reverseBytes(f));
+        mergedFileStream.writeInt(Integer.reverseBytes(iterations));
+
+        int pos = 16;
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                for (int k = 0; k < z; k++) {
+                    byte node = roomFileStream.readByte(pos++);
+
+                    DataInputStream receiverFileStream = null;
+
+                    if (node == RECVR_NODE) {
+                        // get the path for the receiver file and open it
+                        String name = Partition.getPartitionAtPos(partitions, i, j, k).getNextReceiverFileName(rootPath);
+                        receiverFileStream = new DataInputStream(new FileInputStream(name));
+
+                        // read the receiver file data and place it into the merged file
+                        byte[] buffer = receiverFileStream.readNBytes(iterations * Float.BYTES);
+                        mergedFileStream.write(buffer);
+                    } else if (j == height) {
+                        // java guarantees the array is zeroed upon initialization
+                        byte[] buffer = new byte[iterations * Float.BYTES];
+
+                        // if source write as DIRAC source. else it's a boundary node (or an unrecorded air node) so all 0s
+                        if (node == SRC_NODE) {
+                            // Integer has a reverseBytes method but Float doesn't ???
+
+                            // write 1.0f in the first iteration. supposing we're injecting DIRACs
+
+                            // keep in mind since we don't record source node pressure values, so we always
+                            // assume they're 0 after the first iteration for DIRACS even though that'll probably not be the case
+                            // seems accurate enough and hardly noticeable in most cases
+                            buffer[0] = 0x00;
+                            buffer[1] = 0x00;
+                            buffer[2] = -0x80;
+                            buffer[3] = 0x3F;
+                        }
+
+                        mergedFileStream.write(buffer);
+                    }
+
+                    if (receiverFileStream != null) receiverFileStream.close();
+                }
+            }
+        }
+
+        roomFileStream.close();
+        mergedFileStream.close();
+
+        return mergedFileName;
+    }
+
+    /**
+     * Looks for every single level (in the Z axis) where there are receivers.
      * The caller is responsible for closing this BufferedOutputStreams after he's done
-     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #merge(String, String, int, Partition[]) merge} for more info.
+     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #mergeZ(String, String, int, Partition[]) merge} for more info.
      * @param roomFileName The name of the roomFile used in the DWM simulation relative to rootPath
      * @return A Dictionary containing the heights and a BufferedOutputStream were to write data.
      * @throws IOException
@@ -169,12 +392,12 @@ public class Merger {
 
     /**
      * Returns the height (in the Z axis) of the first receiver found.
-     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #merge(String, String, int, Partition[]) merge} for more info.
+     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #mergeZ(String, String, int, Partition[]) merge} for more info.
      * @param roomFileName The name of the roomFile used in the DWM simulation relative to rootPath
      * @return the height of the first found receiver or -1 if none was found
      * @throws IOException
      */
-    private static int getFirstReceiverLevel(String rootPath, String roomFileName) throws IOException {
+    private static int getFirstReceiverLevelZ(String rootPath, String roomFileName) throws IOException {
         BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
 
         final int x = Integer.reverseBytes(roomFileStream.readInt(0));
@@ -190,6 +413,72 @@ public class Merger {
 
                     if (node == RECVR_NODE) {
                         return k;
+                    }
+                }
+            }
+        }
+
+
+        roomFileStream.close();
+        return -1; //none found
+    }
+
+    /**
+     * Returns the height (in the X axis) of the first receiver found.
+     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #mergeX(String, String, int, Partition[]) merge} for more info.
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to rootPath
+     * @return the height of the first found receiver or -1 if none was found
+     * @throws IOException
+     */
+    private static int getFirstReceiverLevelX(String rootPath, String roomFileName) throws IOException {
+        BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
+
+        final int x = Integer.reverseBytes(roomFileStream.readInt(0));
+        final int y = Integer.reverseBytes(roomFileStream.readInt(4));
+        final int z = Integer.reverseBytes(roomFileStream.readInt(8));
+        final int f = Integer.reverseBytes(roomFileStream.readInt(12));
+
+        int pos = 16;
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                for (int k = 0; k < z; k++) {
+                    byte node = roomFileStream.readByte(pos++);
+
+                    if (node == RECVR_NODE) {
+                        return i;
+                    }
+                }
+            }
+        }
+
+
+        roomFileStream.close();
+        return -1; //none found
+    }
+
+    /**
+     * Returns the height (in the Y axis) of the first receiver found.
+     * @param rootPath The base path were we expect the receiver file folders to be. See {@link #mergeY(String, String, int, Partition[]) merge} for more info.
+     * @param roomFileName The name of the roomFile used in the DWM simulation relative to rootPath
+     * @return the height of the first found receiver or -1 if none was found
+     * @throws IOException
+     */
+    private static int getFirstReceiverLevelY(String rootPath, String roomFileName) throws IOException {
+        BufferedRandomReadAccessFile roomFileStream = new BufferedRandomReadAccessFile(CombinePath(rootPath, roomFileName));
+
+        final int x = Integer.reverseBytes(roomFileStream.readInt(0));
+        final int y = Integer.reverseBytes(roomFileStream.readInt(4));
+        final int z = Integer.reverseBytes(roomFileStream.readInt(8));
+        final int f = Integer.reverseBytes(roomFileStream.readInt(12));
+
+        int pos = 16;
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                for (int k = 0; k < z; k++) {
+                    byte node = roomFileStream.readByte(pos++);
+
+                    if (node == RECVR_NODE) {
+                        return j;
                     }
                 }
             }

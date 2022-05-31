@@ -7,6 +7,31 @@ import java.util.*;
  * Set of methods to partition a dwm file into several partitions.
  */
 public interface Partitioner {
+
+    static Tuple<List<Partition>, Character> smartPartition(Room room, int xDiv, int yDiv, int zDiv) throws IOException {
+
+        List<Integer> Divs = new ArrayList<Integer>(Arrays.asList(xDiv, yDiv, zDiv));
+        Divs.sort(Comparator.reverseOrder());
+
+        int x = room.getX();
+        int y = room.getY();
+        int z = room.getZ();
+
+        Divs actual = new Divs(xDiv, yDiv, zDiv);
+        Divs optimal = findBestAxisDivisions(x, y, z, Divs);
+        System.out.println(String.format("Actual partitioning is xDiv = %d yDiv = %d zDiv = %d", actual.xDiv, actual.yDiv, actual.zDiv));
+        System.out.println(String.format("Optimal partitioning is xDiv = %d yDiv = %d zDiv = %d", optimal.xDiv, optimal.yDiv, optimal.zDiv));
+
+        Tuple<Room, Character> result = rotateRoom(room, actual, optimal);
+        Room rotatedRoom = result.getV1();
+
+        final List<Partition> partitions = manualPartition(rotatedRoom.getX(), rotatedRoom.getY(), rotatedRoom.getZ(), xDiv, yDiv, zDiv);
+
+        partition(rotatedRoom, partitions);
+
+        return new Tuple<>(partitions, result.getV2());
+    }
+
     /**
      * Finds the best way to partition a room into n pieces
      *
@@ -39,6 +64,310 @@ public interface Partitioner {
         partition(room, partitions);
 
         return partitions;
+    }
+
+    /**
+     * Rotates the room so that it is compatible with the physical
+     * node layout.
+     *
+     * @param r The room to be partitioned
+     * @param actual The physical node layout
+     * @param optimal The optimal node layout
+     * @return The rotated room and the axis that previously represented the Z axis
+     * @throws IOException From {@link #partition(Room, List)}
+     */
+    private static Tuple<Room, Character> rotateRoom(Room r, Divs actual, Divs optimal) throws IOException
+    {
+        int x = r.getX();
+        int y = r.getY();
+        int z = r.getZ();
+        byte[][][] room = new byte[x][y][z];
+
+        for(int i = 0; i < r.getX(); i++)
+        {
+            for(int j = 0; j < r.getY(); j++)
+            {
+                for(int k = 0; k < r.getZ(); k++)
+                {
+                    room[i][j][k] = r.readNodeAt(i, j, k);
+                }
+            }
+        }
+
+
+        String rotatedRoomFilename = r.getFileName().substring(0, r.getFileName().lastIndexOf(".dwm")) + "_processed.dwm";
+        if(actual.xDiv == optimal.xDiv && actual.yDiv == optimal.yDiv && actual.zDiv == optimal.zDiv)
+        {
+            System.out.println("All good");
+            return new Tuple<>(writeRoom(rotatedRoomFilename, x, y, z, room, r.getF()), 'Z');
+        }
+
+        if(actual.xDiv == optimal.yDiv && actual.yDiv == optimal.xDiv && actual.zDiv == optimal.zDiv)
+        {
+            System.out.println("Rotate z 90 degrees");
+            int tmp = x;
+            x = y;
+            y = tmp;
+
+            room = RotateZ90Deg(room);
+            return new Tuple<>(writeRoom(rotatedRoomFilename, x, y, z, room, r.getF()), 'Z');
+        }
+
+        if(actual.xDiv == optimal.zDiv && actual.yDiv == optimal.xDiv && actual.zDiv == optimal.yDiv)
+        {
+            System.out.println("Rotate z 90 degrees");
+            System.out.println("Rotate x 90 degrees");
+
+            int tmp = x;
+            x = y;
+            y = tmp;
+
+            tmp = y;
+            y = z;
+            z = tmp;
+
+            room = RotateZ90Deg(room);
+            room = RotateX90Deg(room);
+            return new Tuple<>(writeRoom(rotatedRoomFilename, x, y, z, room, r.getF()), 'X');
+        }
+
+        if(actual.xDiv == optimal.zDiv && actual.yDiv == optimal.yDiv && actual.zDiv == optimal.xDiv)
+        {
+            System.out.println("Rotate y 90 degrees");
+            int tmp = x;
+            x = z;
+            z = tmp;
+
+            room = RotateY90Deg(room);
+            return new Tuple<>(writeRoom(rotatedRoomFilename, x, y, z, room, r.getF()), 'X');
+        }
+
+        if(actual.xDiv == optimal.xDiv && actual.yDiv == optimal.zDiv && actual.zDiv == optimal.yDiv)
+        {
+            System.out.println("Rotate x 90 degrees");
+            int tmp = y;
+            y = z;
+            z = tmp;
+
+            room = RotateX90Deg(room);
+            return new Tuple<>(writeRoom(rotatedRoomFilename, x, y, z, room, r.getF()), 'Y');
+        }
+
+        if(actual.xDiv == optimal.yDiv && actual.yDiv == optimal.zDiv && actual.zDiv == optimal.xDiv)
+        {
+            System.out.println("Rotate y 90 degrees");
+            System.out.println("Rotate x 90 degrees");
+            int tmp = x;
+            x = z;
+            z = tmp;
+
+            tmp = y;
+            y = z;
+            z = tmp;
+
+            room = RotateY90Deg(room);
+            room = RotateX90Deg(room);
+            return new Tuple<>(writeRoom(rotatedRoomFilename, x, y, z, room, r.getF()), 'Y');
+        }
+
+        return null;
+    }
+
+    /**
+     * Writes the rotated room.
+     *
+     * @param fileName The name of the file to write
+     * @param x The x dimensions of the rotated room
+     * @param y The y dimensions of the rotated room
+     * @param z The z dimensions of the rotated room
+     * @param room The rotated room
+     * @param f The frequency of the simulation
+     * @return The rotated Room
+     * @throws IOException From {@link #partition(Room, List)}
+     */
+    private static Room writeRoom(String fileName, int x, int y, int z, byte[][][] room, int f) throws IOException
+    {
+        Room rotatedRoom = new Room(fileName, x, y, z, f);
+        rotatedRoom.startWrite();
+        for(int i = 0; i < x; i++)
+        {
+            for(int j = 0; j < y; j++)
+            {
+                for(int k = 0; k < z; k++)
+                {
+                    rotatedRoom.writeNodeAt(i, j, k, room[i][j][k]);
+                }
+            }
+        }
+
+        rotatedRoom.endWrite();
+
+        return Room.fromFile(fileName);
+    }
+
+    /**
+     * Finds the optimal way the room should be partitoned
+     *
+     * @param x The number of divisions along the x axis
+     * @param y The number of divisions along the y axis
+     * @param z The number of divisions along the z axis
+     * @param div A high sorted Integer List with the axis division factors
+     * @return The optimal division layout
+     */
+    private static Divs findBestAxisDivisions(int x, int y, int z, List<Integer> div)
+    {
+        Divs d = new Divs();
+        if( x >= y && x >= z)
+        {
+            d.xDiv = div.get(0);
+            div.remove(0);
+
+            if(y >= z)
+            {
+                d.yDiv = div.get(0);
+                div.remove(0);
+
+                d.zDiv = div.get(0);
+                div.remove(0);
+            }
+            else
+            {
+                d.zDiv = div.get(0);
+                div.remove(0);
+
+                d.yDiv = div.get(0);
+                div.remove(0);
+            }
+        }
+        else if(y >= x && y >= z)
+        {
+            d.yDiv = div.get(0);
+            div.remove(0);
+
+            if(x >= z)
+            {
+                d.xDiv = div.get(0);
+                div.remove(0);
+
+                d.zDiv = div.get(0);
+                div.remove(0);
+            }
+            else
+            {
+                d.zDiv = div.get(0);
+                div.remove(0);
+
+                d.xDiv = div.get(0);
+                div.remove(0);
+            }
+        }
+        else
+        {
+            d.zDiv = div.get(0);
+            div.remove(0);
+
+            if(x >= y)
+            {
+                d.xDiv = div.get(0);
+                div.remove(0);
+
+                d.yDiv = div.get(0);
+                div.remove(0);
+            }
+            else
+            {
+                d.yDiv = div.get(0);
+                div.remove(0);
+
+                d.xDiv = div.get(0);
+                div.remove(0);
+            }
+        }
+
+        return d;
+    }
+
+
+    // https://stackoverflow.com/questions/63876819/rotate-a-3d-array
+    /**
+     * Rotates the 3d array in the X axis.
+     *
+     * @param room The 3d array representing the room
+     * @return The rotated 3D array
+     */
+    private static byte[][][] RotateX90Deg(byte[][][] room)
+    {
+        int x = room.length;
+        int y = room[0].length;
+        int z = room[0][0].length;
+        byte[][][] rotatedRoom = new byte[x][z][y];
+
+        for(int i = 0; i < x; i++)
+        {
+            for(int j = 0; j < z; j++)
+            {
+                for(int k = 0; k < y; k++)
+                {
+                    rotatedRoom[i][j][k] = room[i][y-1-k][j];
+                }
+            }
+        }
+
+        return rotatedRoom;
+    }
+
+    /**
+     * Rotates the 3d array in the Y axis.
+     *
+     * @param room The 3d array representing the room
+     * @return The rotated 3D array
+     */
+    private static byte[][][] RotateY90Deg(byte[][][] room)
+    {
+        int x = room.length;
+        int y = room[0].length;
+        int z = room[0][0].length;
+        byte[][][] rotatedRoom = new byte[z][y][x];
+
+        for(int i = 0; i < z; i++)
+        {
+            for(int j = 0; j < y; j++)
+            {
+                for(int k = 0; k < x; k++)
+                {
+                    rotatedRoom[i][j][k] = room[x-1-k][j][i];
+                }
+            }
+        }
+
+        return rotatedRoom;
+    }
+
+    /**
+     * Rotates the 3d array in the Z axis.
+     *
+     * @param room The 3d array representing the room
+     * @return The rotated 3D array
+     */
+    private static byte[][][] RotateZ90Deg(byte[][][] room)
+    {
+        int x = room.length;
+        int y = room[0].length;
+        int z = room[0][0].length;
+        byte[][][] rotatedRoom = new byte[y][x][z];
+
+        for(int i = 0; i < y; i++)
+        {
+            for(int j = 0; j < x; j++)
+            {
+                for(int k = 0; k < z; k++)
+                {
+                    rotatedRoom[i][j][k] = room[j][y-1-i][k];
+                }
+            }
+        }
+
+        return rotatedRoom;
     }
 
     /**
